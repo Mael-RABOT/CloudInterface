@@ -54,6 +54,30 @@ interface TreeNode {
   icon?: React.ReactNode;
 }
 
+// Helper function to extract original filename by removing ID suffix
+const getOriginalFilename = (filename: string): string => {
+  // Pattern: <name>-<some_id>.<extension>
+  // Remove the ID part before the last dot
+  const lastDotIndex = filename.lastIndexOf('.');
+  if (lastDotIndex === -1) return filename; // No extension found
+
+  const extension = filename.substring(lastDotIndex);
+  const nameWithId = filename.substring(0, lastDotIndex);
+
+  // Find the last dash followed by what looks like an ID
+  const lastDashIndex = nameWithId.lastIndexOf('-');
+  if (lastDashIndex === -1) return filename; // No dash found
+
+  // Check if what follows the dash looks like an ID (alphanumeric)
+  const potentialId = nameWithId.substring(lastDashIndex + 1);
+  if (/^[a-zA-Z0-9]+$/.test(potentialId)) {
+    // It's likely an ID, remove it
+    return nameWithId.substring(0, lastDashIndex) + extension;
+  }
+
+  return filename; // No ID pattern found, return original
+};
+
 const FileManager: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>(items);
@@ -247,11 +271,11 @@ const FileManager: React.FC = () => {
           completedFiles++;
 
           // Show progress for each file
-          message.success(`Uploaded: ${file.name}`);
+          message.success(`Uploaded: ${getOriginalFilename(file.name)}`);
 
         } catch (error: any) {
           console.error(`Upload error for ${file.name}:`, error);
-          message.error(`Failed to upload ${file.name}: ${error.message || 'Unknown error'}`);
+          message.error(`Failed to upload ${getOriginalFilename(file.name)}: ${error.message || 'Unknown error'}`);
           // Continue with next file even if one fails
         }
       }
@@ -293,7 +317,7 @@ const FileManager: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = item.filename;
+      a.download = getOriginalFilename(item.filename);
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -312,13 +336,13 @@ const FileManager: React.FC = () => {
       if (item.contentType.startsWith('image/')) {
         const url = window.URL.createObjectURL(blob);
         setPreviewImage(url);
-        setPreviewTitle(item.filename);
+        setPreviewTitle(getOriginalFilename(item.filename));
         setPreviewVisible(true);
       } else if (item.contentType === 'application/pdf' || item.filename.toLowerCase().endsWith('.pdf')) {
         // Handle PDF preview
         const url = window.URL.createObjectURL(blob);
         setPdfPreviewUrl(url);
-        setPdfPreviewTitle(item.filename);
+        setPdfPreviewTitle(getOriginalFilename(item.filename));
         setPdfPreviewVisible(true);
       } else if (item.contentType.startsWith('text/') ||
                  item.contentType === 'application/json' ||
@@ -329,11 +353,11 @@ const FileManager: React.FC = () => {
                  item.filename.endsWith('.md')) {
         const text = await blob.text();
         setTextPreviewContent(text);
-        setTextPreviewTitle(item.filename);
+        setTextPreviewTitle(getOriginalFilename(item.filename));
         setTextPreviewVisible(true);
       } else {
         console.log("unsupported file type", item.contentType);
-        message.warning(`Cannot preview ${item.filename}. This file type (${item.contentType}) cannot be previewed.`);
+        message.warning(`Cannot preview ${getOriginalFilename(item.filename)}. This file type (${item.contentType}) cannot be previewed.`);
         setUnsupportedFileItem(item);
         setUnsupportedFileModalVisible(true);
       }
@@ -375,11 +399,11 @@ const FileManager: React.FC = () => {
 
           // Show progress for each file
           const fileName = filteredItems.find(item => item.id === key)?.filename || 'Unknown file';
-          message.success(`Deleted: ${fileName}`);
+          message.success(`Deleted: ${getOriginalFilename(fileName)}`);
         } catch (error: any) {
           console.error(`Delete error for file ${key}:`, error);
           const fileName = filteredItems.find(item => item.id === key)?.filename || 'Unknown file';
-          message.error(`Failed to delete ${fileName}: ${error.message || 'Unknown error'}`);
+          message.error(`Failed to delete ${getOriginalFilename(fileName)}: ${error.message || 'Unknown error'}`);
         }
       }
 
@@ -411,7 +435,7 @@ const FileManager: React.FC = () => {
       render: (item: Item) => (
         <Space size="small">
           {getFileIcon(item)}
-          <span className="terminal-text" style={{ fontSize: '11px' }}>{item.filename}</span>
+          <span className="terminal-text" style={{ fontSize: '11px' }}>{getOriginalFilename(item.filename)}</span>
         </Space>
       ),
     },
@@ -747,7 +771,7 @@ const FileManager: React.FC = () => {
                       justifyContent: 'space-between',
                       alignItems: 'center'
                     }}>
-                      <span>{file.name} ({Math.round(file.size / 1024)} KB)</span>
+                      <span>{getOriginalFilename(file.name)} ({Math.round(file.size / 1024)} KB)</span>
                       <Tooltip title="Remove this file">
                         <Button
                           type="text"
@@ -936,7 +960,7 @@ const FileManager: React.FC = () => {
       {/* Unsupported File Modal */}
       <Modal
         open={unsupportedFileModalVisible}
-        title={unsupportedFileItem?.filename || "Unsupported File"}
+        title={unsupportedFileItem ? getOriginalFilename(unsupportedFileItem.filename) : "Unsupported File"}
         footer={null}
         onCancel={() => {
           setUnsupportedFileModalVisible(false);

@@ -5,10 +5,15 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import LoginMobile from './components/mobile/LoginMobile';
+import DashboardMobile from './components/mobile/DashboardMobile';
+import { useDeviceDetection } from './utils/deviceDetection';
 import './App.css';
+import './mobile.css';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  const { isMobile } = useDeviceDetection();
 
   if (isLoading) {
     return (
@@ -35,7 +40,8 @@ const AppContent: React.FC = () => {
       <Route
         path="/login"
         element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+          isAuthenticated ? <Navigate to="/dashboard" replace /> :
+          isMobile ? <LoginMobile /> : <Login />
         }
       />
 
@@ -44,7 +50,7 @@ const AppContent: React.FC = () => {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            {isMobile ? <DashboardMobile /> : <Dashboard />}
           </ProtectedRoute>
         }
       />
