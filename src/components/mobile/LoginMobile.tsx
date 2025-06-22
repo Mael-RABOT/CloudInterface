@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, Tabs, message, Typography, Divider } from 'antd';
+import { Form, Input, Button, Card, Tabs, message } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, LoginOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
 const REGISTER_DISABLED = true;
-
-const { Text } = Typography;
 
 // Simplified ASCII Art Logo for mobile
 const ASCII_LOGO = `

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+  List,
   Button,
   Upload,
   Input,
@@ -7,16 +8,13 @@ import {
   Modal,
   Image,
   Typography,
-  Popconfirm,
   Tree,
   Progress,
   Form,
-  List,
   Avatar,
-  Dropdown,
-  Menu,
+  Spin,
   Drawer,
-  Spin
+  Dropdown
 } from 'antd';
 import {
   UploadOutlined,
@@ -52,6 +50,30 @@ interface TreeNode {
   isLeaf?: boolean;
   icon?: React.ReactNode;
 }
+
+// Helper function to extract original filename by removing ID suffix
+const getOriginalFilename = (filename: string): string => {
+  // Pattern: <name>-<some_id>.<extension>
+  // Remove the ID part before the last dot
+  const lastDotIndex = filename.lastIndexOf('.');
+  if (lastDotIndex === -1) return filename; // No extension found
+
+  const extension = filename.substring(lastDotIndex);
+  const nameWithId = filename.substring(0, lastDotIndex);
+
+  // Find the last dash followed by what looks like an ID
+  const lastDashIndex = nameWithId.lastIndexOf('-');
+  if (lastDashIndex === -1) return filename; // No dash found
+
+  // Check if what follows the dash looks like an ID (alphanumeric)
+  const potentialId = nameWithId.substring(lastDashIndex + 1);
+  if (/^[a-zA-Z0-9]+$/.test(potentialId)) {
+    // It's likely an ID, remove it
+    return nameWithId.substring(0, lastDashIndex) + extension;
+  }
+
+  return filename; // No ID pattern found, return original
+};
 
 const FileManagerMobile: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
@@ -219,7 +241,7 @@ const FileManagerMobile: React.FC = () => {
   // Handle upload
   const handleUpload = async (values: any) => {
     if (selectedFiles.length === 0) {
-      message.error('Please select files to upload');
+      message.error('Please select files');
       return;
     }
 
@@ -231,13 +253,7 @@ const FileManagerMobile: React.FC = () => {
         const file = selectedFiles[i];
         setCurrentUploadFile(file.name);
 
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('location', values.location || currentLocation);
-
-        await itemsAPI.uploadItem(formData, (progress) => {
-          setUploadProgress(progress);
-        });
+        await itemsAPI.uploadFile(values.location || currentLocation, file);
 
         setUploadProgress(((i + 1) / selectedFiles.length) * 100);
       }
@@ -245,7 +261,7 @@ const FileManagerMobile: React.FC = () => {
       message.success('Files uploaded successfully');
       setUploadModalVisible(false);
       setSelectedFiles([]);
-      setUploadForm.resetFields();
+      uploadForm.resetFields();
       loadItems();
     } catch (error: any) {
       message.error(error.response?.data?.error || 'Upload failed');
@@ -263,7 +279,7 @@ const FileManagerMobile: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', item.filename);
+      link.setAttribute('download', getOriginalFilename(item.filename));
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -283,13 +299,13 @@ const FileManagerMobile: React.FC = () => {
       if (item.contentType.startsWith('image/')) {
         const url = window.URL.createObjectURL(blob);
         setPreviewImage(url);
-        setPreviewTitle(item.filename);
+        setPreviewTitle(getOriginalFilename(item.filename));
         setPreviewVisible(true);
       } else if (item.contentType === 'application/pdf' || item.filename.toLowerCase().endsWith('.pdf')) {
         // Handle PDF preview
         const url = window.URL.createObjectURL(blob);
         setPdfPreviewUrl(url);
-        setPdfPreviewTitle(item.filename);
+        setPdfPreviewTitle(getOriginalFilename(item.filename));
         setPdfPreviewVisible(true);
       } else if (item.contentType.startsWith('text/') ||
                  item.contentType === 'application/json' ||
@@ -307,17 +323,17 @@ const FileManagerMobile: React.FC = () => {
                  item.filename.endsWith('.csv')) {
         const text = await blob.text();
         setTextPreviewContent(text);
-        setTextPreviewTitle(item.filename);
+        setTextPreviewTitle(getOriginalFilename(item.filename));
         setTextPreviewVisible(true);
       } else {
         console.log("unsupported file type", item.contentType);
-        message.warning(`Cannot preview ${item.filename}. This file type (${item.contentType}) cannot be previewed.`);
+        message.warning(`Cannot preview ${getOriginalFilename(item.filename)}. This file type (${item.contentType}) cannot be previewed.`);
         setUnsupportedFileItem(item);
         setUnsupportedFileModalVisible(true);
       }
     } catch (error: any) {
       console.error('Preview error:', error);
-      message.error(`Failed to preview ${item.filename}: ${error.message || 'Unknown error'}`);
+      message.error(`Failed to preview ${getOriginalFilename(item.filename)}: ${error.message || 'Unknown error'}`);
     } finally {
       setPreviewLoading(false);
     }
@@ -355,26 +371,34 @@ const FileManagerMobile: React.FC = () => {
   };
 
   // File actions menu
-  const getFileActions = (item: Item) => (
-    <Menu>
-      <Menu.Item key="preview" icon={<EyeOutlined />} onClick={() => handlePreview(item)}>
-        Preview
-      </Menu.Item>
-      <Menu.Item key="download" icon={<DownloadOutlined />} onClick={() => handleDownload(item)}>
-        Download
-      </Menu.Item>
-      <Menu.Item key="delete" icon={<DeleteOutlined />} danger>
-        <Popconfirm
-          title="Are you sure you want to delete this file?"
-          onConfirm={() => handleDelete(item)}
-          okText="Yes"
-          cancelText="No"
-        >
-          Delete
-        </Popconfirm>
-      </Menu.Item>
-    </Menu>
-  );
+  const getFileActions = (item: Item) => [
+    {
+      key: 'preview',
+      icon: <EyeOutlined />,
+      label: 'Preview',
+      onClick: () => handlePreview(item)
+    },
+    {
+      key: 'download',
+      icon: <DownloadOutlined />,
+      label: 'Download',
+      onClick: () => handleDownload(item)
+    },
+    {
+      key: 'delete',
+      icon: <DeleteOutlined />,
+      label: 'Delete',
+      danger: true,
+      onClick: () => {
+        Modal.confirm({
+          title: 'Are you sure you want to delete this file?',
+          onOk: () => handleDelete(item),
+          okText: 'Yes',
+          cancelText: 'No'
+        });
+      }
+    }
+  ];
 
   useEffect(() => {
     loadItems();
@@ -449,7 +473,7 @@ const FileManagerMobile: React.FC = () => {
               className="mobile-file-item"
               onClick={() => handlePreview(item)}
               actions={[
-                <Dropdown overlay={getFileActions(item)} trigger={['click']} onClick={(e) => e.stopPropagation()}>
+                <Dropdown key="actions" menu={{ items: getFileActions(item) }} trigger={['click']}>
                   <Button icon={<MoreOutlined />} type="text" />
                 </Dropdown>
               ]}
@@ -463,16 +487,16 @@ const FileManagerMobile: React.FC = () => {
                 }
                 title={
                   <Text ellipsis className="mobile-file-title">
-                    {item.filename}
+                    {getOriginalFilename(item.filename)}
                   </Text>
                 }
                 description={
                   <div className="mobile-file-details">
                     <Text type="secondary" className="mobile-file-size">
-                      {(item.size / 1024 / 1024).toFixed(2)} MB
+                      {item.contentType}
                     </Text>
                     <Text type="secondary" className="mobile-file-date">
-                      {new Date(item.uploadedAt).toLocaleDateString()}
+                      {new Date(item.createdAt).toLocaleDateString()}
                     </Text>
                   </div>
                 }
@@ -532,7 +556,7 @@ const FileManagerMobile: React.FC = () => {
               <Text strong>Selected Files:</Text>
               {selectedFiles.map((file, index) => (
                 <div key={index} className="mobile-selected-file">
-                  <Text>{file.name}</Text>
+                  <Text>{getOriginalFilename(file.name)}</Text>
                 </div>
               ))}
             </div>
@@ -542,7 +566,7 @@ const FileManagerMobile: React.FC = () => {
             <div className="mobile-upload-progress">
               <Progress percent={uploadProgress} />
               {currentUploadFile && (
-                <Text type="secondary">Uploading: {currentUploadFile}</Text>
+                <Text type="secondary">Uploading: {getOriginalFilename(currentUploadFile)}</Text>
               )}
             </div>
           )}
