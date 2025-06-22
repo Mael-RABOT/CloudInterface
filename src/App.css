@@ -1,0 +1,1232 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #000;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Ant Design overrides */
+.ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+}
+
+.ant-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ant-btn {
+  border-radius: 6px;
+}
+
+.ant-input {
+  border-radius: 6px;
+}
+
+.ant-modal-content {
+  border-radius: 8px;
+}
+
+/* Ensure modals appear above CRT screen */
+.ant-modal-mask {
+  z-index: 9999 !important;
+}
+
+.ant-modal-wrap {
+  z-index: 9999 !important;
+}
+
+.ant-modal {
+  z-index: 10000 !important;
+}
+
+/* File manager specific styles */
+.file-manager-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Login page specific styles */
+.login-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .ant-table {
+    font-size: 12px;
+  }
+
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    padding: 8px 4px;
+  }
+
+  .ant-space {
+    gap: 4px !important;
+  }
+
+  .ant-btn {
+    padding: 4px 8px;
+  }
+}
+
+/* CRT/DOS/ASCII Art Theme */
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+
+/* CRT Scanlines Animation - Reduced intensity */
+@keyframes scanlines {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.98; }
+}
+
+@keyframes glow {
+  0%, 100% { text-shadow: 0 0 2px #00ff00, 0 0 4px #00ff00; }
+  50% { text-shadow: 0 0 4px #00ff00, 0 0 6px #00ff00; }
+}
+
+@keyframes cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* Global CRT Theme */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'VT323', 'Share Tech Mono', monospace;
+  background: #000;
+  color: #00ff00;
+  overflow-x: hidden;
+  position: relative;
+  height: 100vh;
+}
+
+/* CRT Screen Effect - Reduced intensity */
+.crt-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    rgba(0, 255, 0, 0.01) 50%,
+    rgba(0, 0, 0, 0.01) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: scanlines 0.2s linear infinite;
+}
+
+/* Scanlines overlay - Reduced intensity */
+.crt-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.05),
+    rgba(0, 0, 0, 0.05) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+}
+
+/* Flicker effect - Disabled */
+.crt-screen::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 255, 0, 0.01);
+  pointer-events: none;
+}
+
+/* Terminal Container - Full height */
+.terminal-container {
+  background: #000;
+  border: 2px solid #00ff00;
+  border-radius: 0;
+  box-shadow:
+    0 0 20px rgba(0, 255, 0, 0.5),
+    inset 0 0 20px rgba(0, 255, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+}
+
+.terminal-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ff00, transparent);
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+/* ASCII Art Header */
+.ascii-header {
+  font-family: 'VT323', monospace;
+  font-size: 1.2em;
+  text-align: center;
+  color: #00ff00;
+  text-shadow: 0 0 5px #00ff00;
+  margin: 0;
+  padding: 8px 0;
+  white-space: pre;
+  line-height: 1.2;
+  animation: glow 3s ease-in-out infinite alternate;
+}
+
+/* Terminal Text */
+.terminal-text {
+  font-family: 'VT323', monospace;
+  color: #00ff00;
+  text-shadow: 0 0 5px #00ff00;
+}
+
+/* Cursor effect */
+.cursor {
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background: #00ff00;
+  margin-left: 2px;
+  animation: cursor-blink 1s infinite;
+}
+
+/* Retro Button Styles */
+.retro-button {
+  background: #000 !important;
+  border: 2px solid #00ff00 !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 16px !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.retro-button:hover {
+  background: #00ff00 !important;
+  color: #000 !important;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+  transform: translateY(-2px);
+}
+
+.retro-button:active {
+  transform: translateY(0);
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+.retro-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.retro-button:hover::before {
+  left: 100%;
+}
+
+/* Retro Input Styles */
+.retro-input {
+  background: #000 !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 16px !important;
+}
+
+.retro-input:focus {
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5) !important;
+}
+
+.retro-input::placeholder {
+  color: #00aa00 !important;
+  opacity: 0.7;
+}
+
+/* Enhanced Search Input Styles */
+.retro-input.ant-input-search {
+  background: #000 !important;
+  border-radius: 0 !important;
+}
+
+.retro-input.ant-input-search .ant-input {
+  background: #000 !important;
+  border: none !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 14px !important;
+  padding: 8px 12px !important;
+}
+
+.retro-input.ant-input-search .ant-input:focus {
+  border: none !important;
+  box-shadow: none !important;
+  background: #001100 !important;
+}
+
+.retro-input.ant-input-search .ant-input::placeholder {
+  color: #00aa00 !important;
+  opacity: 0.7;
+  font-family: 'VT323', monospace !important;
+}
+
+.retro-input.ant-input-search .ant-input-search-button {
+  background: #000 !important;
+  border-left: none !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 14px !important;
+  border-radius: 0 !important;
+  transition: all 0.3s ease !important;
+}
+
+.retro-input.ant-input-search .ant-input-search-button:hover {
+  background: #00ff00 !important;
+  color: #000 !important;
+}
+
+.retro-input.ant-input-search .ant-input-search-button .anticon {
+  color: inherit !important;
+}
+
+.retro-input.ant-input-search .ant-input-group-addon {
+  background: #000 !important;
+  border-right: none !important;
+  color: #00ff00 !important;
+  border-radius: 0 !important;
+}
+
+.retro-input.ant-input-search .ant-input-group-addon .anticon {
+  color: #00ff00 !important;
+  font-size: 14px !important;
+}
+
+/* Search input focus effects */
+.retro-input.ant-input-search:focus-within {
+  border-color: #00aa00 !important;
+}
+
+/* Comprehensive overrides for all possible white backgrounds */
+.ant-input-search {
+  background: #000 !important;
+  border-radius: 0 !important;
+}
+
+.ant-input-search .ant-input {
+  background: #000 !important;
+  border: none !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 14px !important;
+  padding: 8px 12px !important;
+  outline: none !important;
+}
+
+.ant-input-search .ant-input:focus {
+  border: none !important;
+  box-shadow: none !important;
+  background: #001100 !important;
+  outline: none !important;
+}
+
+.ant-input-search .ant-input:hover {
+  border: none !important;
+  background: #001100 !important;
+}
+
+.ant-input-search .ant-input::placeholder {
+  color: #00aa00 !important;
+  opacity: 0.7;
+  font-family: 'VT323', monospace !important;
+}
+
+.ant-input-search .ant-input-search-button {
+  background: #000 !important;
+  border-left: none !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 14px !important;
+  border-radius: 0 !important;
+  transition: all 0.3s ease !important;
+}
+
+.ant-input-search .ant-input-search-button:hover {
+  background: #00ff00 !important;
+  color: #000 !important;
+}
+
+.ant-input-search .ant-input-search-button:focus {
+  background: #00ff00 !important;
+  color: #000 !important;
+}
+
+.ant-input-search .ant-input-search-button .anticon {
+  color: inherit !important;
+}
+
+.ant-input-search .ant-input-group-addon {
+  background: #000 !important;
+  border-right: none !important;
+  color: #00ff00 !important;
+  border-radius: 0 !important;
+}
+
+.ant-input-search .ant-input-group-addon .anticon {
+  color: #00ff00 !important;
+  font-size: 14px !important;
+}
+
+/* Override any input group wrapper styles */
+.ant-input-group {
+  background: #000 !important;
+  border: none !important;
+}
+
+.ant-input-group-wrapper {
+  background: #000 !important;
+  border: none !important;
+}
+
+/* Override any remaining white backgrounds */
+.ant-input-search * {
+  background-color: transparent !important;
+}
+
+.ant-input-search .ant-input-group-addon,
+.ant-input-search .ant-input,
+.ant-input-search .ant-input-search-button {
+  background-color: #000 !important;
+}
+
+/* Remove any default Ant Design focus rings */
+.ant-input-search .ant-input:focus,
+.ant-input-search .ant-input-search-button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Override any pseudo-elements that might have white backgrounds */
+.ant-input-search::before,
+.ant-input-search::after {
+  background: transparent !important;
+}
+
+.ant-input-search .ant-input::before,
+.ant-input-search .ant-input::after {
+  background: transparent !important;
+}
+
+/* Compact search input styles */
+.retro-input.ant-input-search.compact .ant-input {
+  font-size: 12px !important;
+  padding: 6px 10px !important;
+}
+
+.retro-input.ant-input-search.compact .ant-input-search-button {
+  font-size: 12px !important;
+  padding: 6px 10px !important;
+}
+
+.retro-input.ant-input-search.compact .ant-input-group-addon .anticon {
+  font-size: 12px !important;
+}
+
+/* Retro Table Styles - Improved */
+.retro-table {
+  background: #000 !important;
+  border: 2px solid #00ff00 !important;
+}
+
+.retro-table .ant-table {
+  background: #000 !important;
+  color: #00ff00 !important;
+}
+
+.retro-table .ant-table-thead > tr > th {
+  background: #001100 !important;
+  border-bottom: 2px solid #00ff00 !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 16px !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold !important;
+}
+
+.retro-table .ant-table-tbody > tr > td {
+  background: #000 !important;
+  border-bottom: 1px solid #003300 !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 14px !important;
+}
+
+.retro-table .ant-table-tbody > tr:hover > td {
+  background: #001100 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+}
+
+.retro-table .ant-table-pagination {
+  background: #000 !important;
+  color: #00ff00 !important;
+}
+
+.retro-table .ant-pagination-item {
+  background: #000 !important;
+  border: 1px solid #00ff00 !important;
+  color: #00ff00 !important;
+}
+
+.retro-table .ant-pagination-item a {
+  color: #00ff00 !important;
+}
+
+.retro-table .ant-pagination-item:hover {
+  background: #001100 !important;
+  border-color: #00aa00 !important;
+}
+
+.retro-table .ant-pagination-item:hover a {
+  color: #00aa00 !important;
+}
+
+.retro-table .ant-pagination-item-active {
+  background: #00ff00 !important;
+  border-color: #00ff00 !important;
+  color: #000 !important;
+}
+
+.retro-table .ant-pagination-item-active a {
+  color: #000 !important;
+}
+
+.retro-table .ant-pagination-prev,
+.retro-table .ant-pagination-next {
+  background: #000 !important;
+  border: 1px solid #00ff00 !important;
+  color: #00ff00 !important;
+}
+
+.retro-table .ant-pagination-prev:hover,
+.retro-table .ant-pagination-next:hover {
+  background: #001100 !important;
+  border-color: #00aa00 !important;
+}
+
+.retro-table .ant-pagination-prev .ant-pagination-item-link,
+.retro-table .ant-pagination-next .ant-pagination-item-link {
+  color: #00ff00 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.retro-table .ant-pagination-prev:hover .ant-pagination-item-link,
+.retro-table .ant-pagination-next:hover .ant-pagination-item-link {
+  color: #00aa00 !important;
+}
+
+.retro-table .ant-pagination-prev .anticon,
+.retro-table .ant-pagination-next .anticon {
+  color: #00ff00 !important;
+  font-size: 14px !important;
+}
+
+.retro-table .ant-pagination-prev:hover .anticon,
+.retro-table .ant-pagination-next:hover .anticon {
+  color: #00aa00 !important;
+}
+
+/* Retro Card Styles */
+.retro-card {
+  background: #000 !important;
+  border: 2px solid #00ff00 !important;
+  border-radius: 0 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3) !important;
+  margin: 0;
+}
+
+.retro-card .ant-card-head {
+  background: #001100 !important;
+  border-bottom: 2px solid #00ff00 !important;
+  padding: 0 8px;
+  min-height: 32px;
+}
+
+.retro-card .ant-card-head-title {
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 14px !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold !important;
+  padding: 4px 0;
+}
+
+/* Retro Modal Styles - Fixed scroll behavior */
+.retro-modal .ant-modal-content {
+  background: #000 !important;
+  border: 2px solid #00ff00 !important;
+  border-radius: 0 !important;
+  box-shadow: 0 0 30px rgba(0, 255, 0, 0.5) !important;
+  max-height: 90vh !important;
+  overflow: hidden !important;
+  z-index: 10000 !important;
+}
+
+.retro-modal .ant-modal-mask {
+  z-index: 9999 !important;
+}
+
+.retro-modal .ant-modal-wrap {
+  z-index: 9999 !important;
+}
+
+.retro-modal .ant-modal {
+  z-index: 10000 !important;
+}
+
+.retro-modal .ant-modal-body {
+  max-height: calc(90vh - 120px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.retro-modal .ant-modal-header {
+  background: #001100 !important;
+  border-bottom: 2px solid #00ff00 !important;
+}
+
+.retro-modal .ant-modal-title {
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 18px !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.retro-modal .ant-modal-close {
+  color: #00ff00 !important;
+}
+
+.retro-modal .ant-modal-close:hover {
+  color: #00aa00 !important;
+}
+
+/* Retro Tabs Styles */
+.retro-tabs .ant-tabs-tab {
+  background: #000 !important;
+  border: 2px solid #00ff00 !important;
+  border-bottom: none !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 16px !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-right: 0 !important;
+}
+
+.retro-tabs .ant-tabs-tab-active {
+  background: #001100 !important;
+  border-bottom: 2px solid #001100 !important;
+}
+
+.retro-tabs .ant-tabs-tab:hover {
+  color: #00aa00 !important;
+}
+
+.retro-tabs .ant-tabs-ink-bar {
+  background: #00ff00 !important;
+  height: 3px !important;
+}
+
+/* File Tree Styles */
+.file-tree {
+  background: #000;
+  border: 2px solid #00ff00;
+  border-radius: 0;
+  padding: 4px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.file-tree-item {
+  display: flex;
+  align-items: center;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'VT323', monospace;
+  font-size: 12px;
+  color: #00ff00;
+}
+
+.file-tree-item:hover {
+  background: #001100;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+}
+
+.file-tree-item.selected {
+  background: #00ff00;
+  color: #000;
+}
+
+.file-tree-item .folder-icon {
+  margin-right: 8px;
+  color: #00ff00;
+}
+
+/* Ant Design Tree Component Overrides - Retro Theme */
+.ant-tree {
+  background: #000 !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+}
+
+.ant-tree .ant-tree-node-content-wrapper {
+  background: transparent !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 12px !important;
+  padding: 2px 4px !important;
+  border-radius: 0 !important;
+  transition: all 0.3s ease !important;
+}
+
+.ant-tree .ant-tree-node-content-wrapper:hover {
+  background: #001100 !important;
+  color: #00ff00 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3) !important;
+}
+
+.ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+  background: #00ff00 !important;
+  color: #000 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5) !important;
+}
+
+.ant-tree .ant-tree-title {
+  color: inherit !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 12px !important;
+}
+
+.ant-tree .ant-tree-switcher {
+  background: transparent !important;
+  color: #00ff00 !important;
+  border: none !important;
+}
+
+.ant-tree .ant-tree-switcher .ant-tree-switcher-icon {
+  color: #00ff00 !important;
+  font-size: 12px !important;
+}
+
+.ant-tree .ant-tree-switcher:hover {
+  background: #001100 !important;
+  color: #00aa00 !important;
+}
+
+.ant-tree .ant-tree-iconEle {
+  color: #00ff00 !important;
+  font-size: 14px !important;
+}
+
+.ant-tree .ant-tree-iconEle .anticon {
+  color: #00ff00 !important;
+}
+
+.ant-tree .ant-tree-iconEle .file-icon {
+  color: #00ff00 !important;
+}
+
+.ant-tree .ant-tree-iconEle .file-icon.folder {
+  color: #ffff00 !important;
+}
+
+.ant-tree .ant-tree-iconEle .file-icon.image {
+  color: #00ff00 !important;
+}
+
+.ant-tree .ant-tree-iconEle .file-icon.text {
+  color: #00aa00 !important;
+}
+
+.ant-tree .ant-tree-iconEle .file-icon.pdf {
+  color: #ff0000 !important;
+}
+
+/* Tree container background */
+.ant-tree-list {
+  background: #000 !important;
+}
+
+.ant-tree-list-holder {
+  background: #000 !important;
+}
+
+.ant-tree-list-holder-inner {
+  background: #000 !important;
+}
+
+/* Remove any default borders or backgrounds */
+.ant-tree .ant-tree-treenode {
+  background: transparent !important;
+  border: none !important;
+}
+
+.ant-tree .ant-tree-treenode:hover {
+  background: transparent !important;
+}
+
+.ant-tree .ant-tree-treenode.ant-tree-treenode-selected {
+  background: transparent !important;
+}
+
+/* Compact tree styles */
+.file-tree.compact .ant-tree .ant-tree-node-content-wrapper {
+  padding: 1px 3px !important;
+  font-size: 11px !important;
+  min-height: 20px !important;
+}
+
+.file-tree.compact .ant-tree .ant-tree-title {
+  font-size: 11px !important;
+}
+
+.file-tree.compact .ant-tree .ant-tree-switcher {
+  width: 16px !important;
+  height: 20px !important;
+  line-height: 20px !important;
+}
+
+.file-tree.compact .ant-tree .ant-tree-switcher .ant-tree-switcher-icon {
+  font-size: 10px !important;
+}
+
+.file-tree.compact .ant-tree .ant-tree-iconEle {
+  width: 16px !important;
+  height: 20px !important;
+  line-height: 20px !important;
+}
+
+.file-tree.compact .ant-tree .ant-tree-iconEle .anticon {
+  font-size: 12px !important;
+}
+
+/* Progress Bar */
+.retro-progress {
+  background: #000 !important;
+  border: 2px solid #00ff00 !important;
+  border-radius: 0 !important;
+}
+
+.retro-progress .ant-progress-bg {
+  background: #00ff00 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+/* Status Messages */
+.status-message {
+  font-family: 'VT323', monospace;
+  font-size: 14px;
+  color: #00ff00;
+  text-shadow: 0 0 5px #00ff00;
+  padding: 8px;
+  border: 1px solid #00ff00;
+  background: #000;
+  margin: 0;
+}
+
+.status-message.success {
+  color: #00ff00;
+  border-color: #00ff00;
+}
+
+.status-message.error {
+  color: #ff0000;
+  border-color: #ff0000;
+  text-shadow: 0 0 5px #ff0000;
+}
+
+.status-message.warning {
+  color: #ffff00;
+  border-color: #ffff00;
+  text-shadow: 0 0 5px #ffff00;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000;
+  border: 1px solid #00ff00;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00ff00;
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00aa00;
+}
+
+/* Loading Spinner */
+.retro-spinner .ant-spin-dot-item {
+  background-color: #00ff00 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+/* File Type Icons */
+.file-icon {
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.file-icon.image {
+  color: #00ff00;
+}
+
+.file-icon.text {
+  color: #00aa00;
+}
+
+.file-icon.folder {
+  color: #ffff00;
+}
+
+.file-icon.pdf {
+  color: #ff0000;
+}
+
+/* Image Preview - Disable click to open */
+.retro-modal .ant-image {
+  pointer-events: none !important;
+}
+
+.retro-modal .ant-image-img {
+  pointer-events: none !important;
+}
+
+/* Dashboard Container - Full height */
+.dashboard-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+}
+
+.dashboard-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+}
+
+/* Compact Header */
+.ascii-header.compact {
+  font-size: 0.8em;
+  line-height: 1.2;
+  padding: 4px 0;
+  margin: 0;
+  text-align: center;
+  background: #000;
+  border-bottom: 1px solid #00ff00;
+}
+
+/* Compact Status Bar */
+.status-message.compact {
+  margin: 4px 0;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* Compact Cards */
+.retro-card.compact .ant-card-head {
+  padding: 0 8px;
+  min-height: 32px;
+}
+
+.retro-card.compact .ant-card-head-title {
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+.retro-card.compact .ant-card-body {
+  padding: 8px;
+}
+
+/* Compact File Tree */
+.file-tree.compact {
+  padding: 4px;
+  font-size: 11px;
+}
+
+.file-tree.compact .ant-tree-node-content-wrapper {
+  padding: 2px 4px;
+  min-height: 24px;
+}
+
+.file-tree.compact .ant-tree-title {
+  font-size: 11px;
+}
+
+/* Compact Table */
+.retro-table.compact .ant-table-thead > tr > th {
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.retro-table.compact .ant-table-tbody > tr > td {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.retro-table.compact .ant-table-pagination {
+  margin: 8px 0;
+  padding: 0 8px;
+}
+
+.retro-table.compact .ant-pagination-item {
+  min-width: 24px;
+  height: 24px;
+  line-height: 22px;
+}
+
+.retro-table.compact .ant-pagination-item a {
+  font-size: 11px;
+}
+
+/* Table Row Selection Styles - Retro Theme */
+.retro-table .ant-table-selection {
+  background: transparent !important;
+}
+
+.retro-table .ant-table-selection-col {
+  background: transparent !important;
+  border-right: 1px solid #003300 !important;
+}
+
+.retro-table .ant-checkbox-wrapper {
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+}
+
+.retro-table .ant-checkbox {
+  background: #000 !important;
+  border: 2px solid #00ff00 !important;
+  border-radius: 0 !important;
+}
+
+.retro-table .ant-checkbox:hover {
+  border-color: #00aa00 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3) !important;
+}
+
+.retro-table .ant-checkbox-checked .ant-checkbox-inner {
+  background: #00ff00 !important;
+  border-color: #00ff00 !important;
+  border-radius: 0 !important;
+}
+
+.retro-table .ant-checkbox-checked .ant-checkbox-inner::after {
+  border-color: #000 !important;
+}
+
+.retro-table .ant-checkbox-inner {
+  background: #000 !important;
+  border: 2px solid #00ff00 !important;
+  border-radius: 0 !important;
+}
+
+.retro-table .ant-checkbox-inner::after {
+  border-color: #00ff00 !important;
+}
+
+.retro-table .ant-checkbox-indeterminate .ant-checkbox-inner {
+  background: #001100 !important;
+  border-color: #00ff00 !important;
+}
+
+.retro-table .ant-checkbox-indeterminate .ant-checkbox-inner::after {
+  background: #00ff00 !important;
+}
+
+.retro-table .ant-table-selection-select-all-custom {
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 12px !important;
+}
+
+/* Compact row selection styles */
+.retro-table.compact .ant-checkbox {
+  transform: scale(0.8);
+}
+
+.retro-table.compact .ant-table-selection-col {
+  width: 40px !important;
+  padding: 4px 2px !important;
+}
+
+.retro-table.compact .ant-table-selection-select-all-custom {
+  font-size: 10px !important;
+}
+
+/* Ensure full height usage */
+.ant-row {
+  height: 100%;
+}
+
+.ant-col {
+  height: 100%;
+}
+
+/* Remove default margins and padding */
+.ant-card {
+  margin: 0;
+}
+
+.ant-card-body {
+  height: 100%;
+}
+
+/* Optimize table height */
+.ant-table-wrapper {
+  height: 100%;
+}
+
+.ant-table {
+  height: 100%;
+}
+
+.ant-table-container {
+  height: 100%;
+}
+
+.ant-table-content {
+  height: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ascii-header.compact {
+    font-size: 0.6em;
+  }
+
+  .status-message.compact {
+    font-size: 10px;
+  }
+
+  .retro-card.compact .ant-card-head-title {
+    font-size: 10px;
+  }
+
+  .file-tree.compact .ant-tree-title {
+    font-size: 10px;
+  }
+
+  .retro-table.compact .ant-table-thead > tr > th,
+  .retro-table.compact .ant-table-tbody > tr > td {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+}
+
+/* Compact Buttons */
+.retro-button.compact {
+  height: 28px;
+  padding: 0 8px;
+  font-size: 11px;
+}
