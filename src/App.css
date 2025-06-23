@@ -1116,13 +1116,13 @@ body {
 }
 
 .retro-table .ant-checkbox-checked .ant-checkbox-inner {
-  background: #00ff00 !important;
+  background-color: #00ff00 !important;
   border-color: #00ff00 !important;
-  border-radius: 0 !important;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.5) !important;
 }
 
 .retro-table .ant-checkbox-checked .ant-checkbox-inner::after {
-  border-color: #000 !important;
+  display: none !important;
 }
 
 .retro-table .ant-checkbox-inner {
@@ -1230,3 +1230,725 @@ body {
   padding: 0 8px;
   font-size: 11px;
 }
+
+/* Enhanced Retro Theme Styles */
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+
+/* Global CRT Theme */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'VT323', 'Share Tech Mono', monospace;
+  background: #000;
+  color: #00ff00;
+  overflow-x: hidden;
+  position: relative;
+  height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Enhanced Animations - Simplified */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Login Page Specific Styles */
+.login-background-effects {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-background-effects .glow-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(0, 255, 0, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0, 255, 0, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(0, 255, 0, 0.03) 0%, transparent 50%);
+  animation: float 8s ease-in-out infinite;
+}
+
+.ascii-logo-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.ascii-logo {
+  position: relative;
+  z-index: 2;
+}
+
+/* Dashboard Specific Styles */
+.dashboard-background-effects {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dashboard-background-effects .data-streams {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(0, 255, 0, 0.03) 50%, transparent 100%);
+  animation: data-stream 12s linear infinite;
+}
+
+@keyframes data-stream {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100vw); }
+}
+
+/* Enhanced Component Styles */
+.login-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Enhanced Button Styles */
+.ant-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.ant-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 255, 0, 0.2);
+}
+
+/* Enhanced Input Styles */
+.ant-input {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.ant-input:focus {
+  box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.2);
+  border-color: #00ff00;
+}
+
+.ant-input:hover {
+  border-color: #00cc00;
+}
+
+/* Enhanced Table Styles */
+.ant-table {
+  position: relative;
+}
+
+.ant-table-thead > tr > th {
+  background: linear-gradient(135deg, #001100 0%, #002200 100%);
+  border-bottom: 2px solid #00ff00;
+  color: #00ff00;
+  font-weight: bold;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: rgba(0, 255, 0, 0.05);
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid #008800;
+  transition: all 0.3s ease;
+}
+
+/* Enhanced Card Styles */
+.ant-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.ant-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 255, 0, 0.15);
+}
+
+.ant-card-head {
+  background: linear-gradient(135deg, #001100 0%, #002200 100%);
+  border-bottom: 2px solid #00ff00;
+}
+
+.ant-card-head-title {
+  color: #00ff00;
+  font-weight: bold;
+}
+
+/* Enhanced Modal Styles */
+.ant-modal-content {
+  background: #000;
+  border: 2px solid #00ff00;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+}
+
+.ant-modal-header {
+  background: #001100;
+  border-bottom: 2px solid #00ff00;
+}
+
+.ant-modal-title {
+  color: #00ff00;
+  font-weight: bold;
+}
+
+/* Enhanced Tabs Styles */
+.ant-tabs-tab {
+  color: #00cc00;
+  transition: all 0.3s ease;
+}
+
+.ant-tabs-tab:hover {
+  color: #00ff00;
+}
+
+.ant-tabs-tab-active {
+  color: #00ff00;
+}
+
+.ant-tabs-ink-bar {
+  background: #00ff00;
+}
+
+/* Enhanced Tree Styles */
+.ant-tree {
+  background: transparent;
+}
+
+.ant-tree-node-content-wrapper {
+  color: #00cc00;
+  transition: all 0.3s ease;
+}
+
+.ant-tree-node-content-wrapper:hover {
+  background: rgba(0, 255, 0, 0.05);
+  color: #00ff00;
+}
+
+.ant-tree-node-content-wrapper.ant-tree-node-selected {
+  background: rgba(0, 255, 0, 0.1);
+  color: #00ff00;
+}
+
+/* Enhanced Progress Styles */
+.ant-progress-bg {
+  background: linear-gradient(90deg, #00ff00, #00cc00);
+}
+
+/* Enhanced Message Styles */
+.ant-message {
+  z-index: 10001;
+}
+
+.ant-message-notice-content {
+  background: #001100;
+  border: 2px solid #00ff00;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+  color: #00ff00;
+  font-family: 'VT323', monospace;
+}
+
+/* Enhanced Notification Styles */
+.ant-notification {
+  z-index: 10001;
+}
+
+.ant-notification-notice {
+  background: #001100;
+  border: 2px solid #00ff00;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+  color: #00ff00;
+  font-family: 'VT323', monospace;
+}
+
+/* Enhanced Tooltip Styles */
+.ant-tooltip-inner {
+  background: #001100;
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  font-family: 'VT323', monospace;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+}
+
+/* Enhanced Popover Styles */
+.ant-popover-inner {
+  background: #001100;
+  border: 1px solid #00ff00;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+}
+
+.ant-popover-title {
+  color: #00ff00;
+  border-bottom: 1px solid #00ff00;
+  font-family: 'VT323', monospace;
+}
+
+.ant-popover-inner-content {
+  color: #00cc00;
+  font-family: 'VT323', monospace;
+}
+
+/* Enhanced Dropdown Styles */
+.ant-dropdown-menu {
+  background: #001100;
+  border: 1px solid #00ff00;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+}
+
+.ant-dropdown-menu-item {
+  color: #00cc00;
+  font-family: 'VT323', monospace;
+  transition: all 0.3s ease;
+}
+
+.ant-dropdown-menu-item:hover {
+  background: rgba(0, 255, 0, 0.05);
+  color: #00ff00;
+}
+
+/* Enhanced Select Styles */
+.ant-select-dropdown {
+  background: #001100;
+  border: 1px solid #00ff00;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+}
+
+.ant-select-item {
+  color: #00cc00;
+  font-family: 'VT323', monospace;
+  transition: all 0.3s ease;
+}
+
+.ant-select-item:hover {
+  background: rgba(0, 255, 0, 0.05);
+  color: #00ff00;
+}
+
+.ant-select-item-option-selected {
+  background: rgba(0, 255, 0, 0.1);
+  color: #00ff00;
+}
+
+/* Enhanced Upload Styles */
+.ant-upload {
+  border: 2px dashed #00ff00;
+  background: rgba(0, 255, 0, 0.02);
+  transition: all 0.3s ease;
+}
+
+.ant-upload:hover {
+  border-color: #00cc00;
+  background: rgba(0, 255, 0, 0.05);
+}
+
+.ant-upload-drag {
+  background: rgba(0, 255, 0, 0.02);
+  border: 2px dashed #00ff00;
+}
+
+.ant-upload-drag:hover {
+  background: rgba(0, 255, 0, 0.05);
+  border-color: #00cc00;
+}
+
+/* Enhanced Form Styles */
+.ant-form-item-label > label {
+  color: #00cc00;
+  font-family: 'VT323', monospace;
+  font-weight: bold;
+}
+
+.ant-form-item-required::before {
+  color: #ff0000;
+}
+
+/* Enhanced Divider Styles */
+.ant-divider {
+  border-color: #00ff00;
+}
+
+.ant-divider-inner-text {
+  color: #00cc00;
+  font-family: 'VT323', monospace;
+  background: #000;
+  padding: 0 10px;
+}
+
+/* Enhanced Typography Styles */
+.ant-typography {
+  font-family: 'VT323', monospace;
+}
+
+.ant-typography h1,
+.ant-typography h2,
+.ant-typography h3,
+.ant-typography h4,
+.ant-typography h5 {
+  color: #00ff00;
+}
+
+/* Enhanced Space Styles */
+.ant-space {
+  font-family: 'VT323', monospace;
+}
+
+/* Enhanced Row/Col Styles */
+.ant-row {
+  font-family: 'VT323', monospace;
+}
+
+.ant-col {
+  font-family: 'VT323', monospace;
+}
+
+/* Enhanced Layout Styles */
+.ant-layout {
+  background: transparent;
+}
+
+.ant-layout-header {
+  background: #001100;
+  border-bottom: 2px solid #00ff00;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.15);
+}
+
+.ant-layout-sider {
+  background: #001100;
+  border-right: 2px solid #00ff00;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.15);
+}
+
+.ant-layout-content {
+  background: transparent;
+}
+
+/* Enhanced Spinner Styles */
+.retro-spinner {
+  position: relative;
+}
+
+.retro-spinner .ant-spin-dot-item {
+  background-color: #00ff00;
+}
+
+/* Enhanced File Icon Styles */
+.file-icon {
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.file-icon.image {
+  color: #00ffff;
+}
+
+.file-icon.text {
+  color: #ffff00;
+}
+
+.file-icon.folder {
+  color: #ff8000;
+}
+
+.file-icon.pdf {
+  color: #ff0000;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ascii-logo {
+    font-size: 8px !important;
+  }
+
+  .ant-layout-sider {
+    width: 200px !important;
+  }
+
+  .ant-table {
+    font-size: 12px;
+  }
+
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    padding: 8px 4px;
+  }
+
+  .ant-space {
+    gap: 4px !important;
+  }
+
+  .ant-btn {
+    padding: 4px 8px;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #001100;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00ff00;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00cc00;
+}
+
+/* Focus States */
+*:focus {
+  outline: 2px solid #00ff00;
+  outline-offset: 2px;
+}
+
+/* Selection Styles */
+::selection {
+  background: rgba(0, 255, 0, 0.2);
+  color: #00ff00;
+}
+
+::-moz-selection {
+  background: rgba(0, 255, 0, 0.2);
+  color: #00ff00;
+}
+
+/* Custom checkbox styles for bulk selection */
+.custom-checkbox .ant-checkbox-inner {
+  background-color: #001100 !important;
+  border: 2px solid #00ff00 !important;
+  border-radius: 3px !important;
+  width: 16px !important;
+  height: 16px !important;
+  position: relative !important;
+  transition: all 0.2s ease !important;
+}
+
+.custom-checkbox:hover .ant-checkbox-inner {
+  border-color: #00ff88 !important;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.3) !important;
+}
+
+.custom-checkbox .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #00ff00 !important;
+  border-color: #00ff00 !important;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.5) !important;
+}
+
+.custom-checkbox .ant-checkbox-checked .ant-checkbox-inner::after {
+  display: none !important;
+}
+
+.custom-checkbox .ant-checkbox-input:focus + .ant-checkbox-inner {
+  border-color: #00ff88 !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.2) !important;
+}
+
+.custom-checkbox .ant-checkbox-indeterminate .ant-checkbox-inner {
+  background-color: #00ff00 !important;
+  border-color: #00ff00 !important;
+}
+
+.custom-checkbox .ant-checkbox-indeterminate .ant-checkbox-inner::after {
+  background-color: #001100 !important;
+  width: 8px !important;
+  height: 2px !important;
+  top: 6px !important;
+  left: 2px !important;
+}
+
+/* Ensure checkbox wrapper doesn't interfere */
+.custom-checkbox.ant-checkbox-wrapper {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.custom-checkbox.ant-checkbox {
+  top: 0 !important;
+}
+
+/* Custom tree styles for folder navigation */
+.custom-tree .ant-tree-node-content-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  min-height: 32px !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+  background: transparent !important;
+  border: none !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+.custom-tree .ant-tree-node-content-wrapper:hover {
+  background: rgba(0, 255, 0, 0.1) !important;
+  border: 1px solid rgba(0, 255, 0, 0.3) !important;
+}
+
+.custom-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+  background: rgba(0, 255, 0, 0.2) !important;
+  border: 1px solid #00ff00 !important;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.3) !important;
+}
+
+.custom-tree .ant-tree-title {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-family: 'VT323', 'Share Tech Mono', monospace !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #00ff00 !important;
+  line-height: 1.4 !important;
+}
+
+.custom-tree .ant-tree-switcher {
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-tree .ant-tree-switcher .ant-tree-switcher-icon {
+  color: #00ff00 !important;
+  font-size: 10px !important;
+  transition: all 0.2s ease !important;
+}
+
+.custom-tree .ant-tree-switcher:hover {
+  background: rgba(0, 255, 0, 0.1) !important;
+  border-radius: 2px !important;
+}
+
+.custom-tree .ant-tree-iconEle {
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.custom-tree .ant-tree-iconEle .anticon {
+  font-size: 14px !important;
+  color: #00ff00 !important;
+}
+
+.custom-tree .ant-tree-iconEle .anticon.folder {
+  color: #ffaa00 !important;
+}
+
+.custom-tree .ant-tree-iconEle .anticon.home {
+  color: #00ff88 !important;
+}
+
+.custom-tree .ant-tree-list {
+  background: transparent !important;
+}
+
+.custom-tree .ant-tree-list-holder {
+  background: transparent !important;
+}
+
+.custom-tree .ant-tree-list-holder-inner {
+  background: transparent !important;
+}
+
+.custom-tree .ant-tree-treenode {
+  padding: 2px 0 !important;
+  background: transparent !important;
+}
+
+.custom-tree .ant-tree-treenode:hover {
+  background: transparent !important;
+}
+
+.custom-tree .ant-tree-treenode.ant-tree-treenode-selected {
+  background: transparent !important;
+}
+
+/* Compact tree for smaller screens */
+@media (max-width: 768px) {
+  .custom-tree .ant-tree-node-content-wrapper {
+    min-height: 28px !important;
+    padding: 3px 6px !important;
+  }
+
+  .custom-tree .ant-tree-title {
+    font-size: 12px !important;
+  }
+
+  .custom-tree .ant-tree-iconEle {
+    width: 14px !important;
+    height: 14px !important;
+    margin-right: 4px !important;
+  }
+
+  .custom-tree .ant-tree-iconEle .anticon {
+    font-size: 12px !important;
+  }
+
+  .custom-tree .ant-tree-switcher {
+    width: 14px !important;
+    height: 14px !important;
+    margin-right: 3px !important;
+  }
+
+  .custom-tree .ant-tree-switcher .ant-tree-switcher-icon {
+    font-size: 9px !important;
+  }
+}
+
+/* Custom checkbox styles for bulk selection */

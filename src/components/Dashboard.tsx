@@ -1,11 +1,1649 @@
-import React from 'react';
-import FileManager from './FileManager';
+import React, { useState, useEffect } from 'react';
+import { Layout, Typography, theme, Button, Tree, message, Modal, Upload, Progress, Form, Input, Tooltip, Image, Checkbox } from 'antd';
+import {
+  FileTextOutlined,
+  DatabaseOutlined,
+  LogoutOutlined,
+  FolderOutlined,
+  HomeOutlined,
+  UploadOutlined,
+  InboxOutlined,
+  DeleteOutlined,
+  EyeOutlined,
+  DownloadOutlined,
+  FilePdfOutlined,
+  FileWordOutlined,
+  FileExcelOutlined,
+  FilePptOutlined,
+  FileZipOutlined,
+  FileOutlined,
+  CodeOutlined,
+  SettingOutlined,
+  VideoCameraOutlined,
+  SoundOutlined,
+  FileMarkdownOutlined,
+  FileImageOutlined,
+  FileUnknownOutlined,
+  LoadingOutlined
+} from '@ant-design/icons';
+import { useAuth } from '../contexts/AuthContext';
+import { itemsAPI } from '../services/api';
+import type { Item } from '../services/api';
+import type { Key } from 'antd/es/table/interface';
+
+const { Header, Sider, Content } = Layout;
+const { Title, Text } = Typography;
+const { Dragger } = Upload;
+
+// ASCII Art Header
+const ASCII_HEADER = `
+   ╔═══════════════════════════════════════════════════╗             ██████╗██╗      ██████╗ ██╗   ██╗██████╗              ╔══════════════════════╗
+   ║          INTERFACE v2.0 - TERMINAL ACCESS         ║            ██╔════╝██║     ██╔═══██╗██║   ██║██╔══██╗             ║     SYSTEM INFO      ║
+   ║              SECURE FILE MANAGEMENT               ║  ╔══════╗  ██║     ██║     ██║   ██║██║   ██║██║  ██║  ╔══════╗   ║                      ║
+   ║                                                   ║  ╚══════╝  ██║     ██║     ██║   ██║██║   ██║██║  ██║  ╚══════╝   ║    STATUS: ONLINE    ║
+   ║              [SYSTEM ONLINE] [SECURE]             ║            ╚██████╗███████╗╚██████╔╝╚██████╔╝██████╔╝             ║   SECURITY: ACTIVE   ║
+   ╚═══════════════════════════════════════════════════╝             ╚═════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝              ╚══════════════════════╝
+`;
+
+// Custom File Display Component
+interface FileGridProps {
+  files: Item[];
+  onPreview: (file: Item) => void;
+  onDownload: (file: Item) => void;
+  onDelete: (file: Item) => void;
+  loading?: boolean;
+  selectedFileIds: Set<number>;
+  onFileSelect: (fileId: number, selected: boolean) => void;
+}
+
+const FileGrid: React.FC<FileGridProps> = ({ files, onPreview, onDownload, onDelete, loading, selectedFileIds, onFileSelect }) => {
+  const { token } = theme.useToken();
+
+  const getFileIcon = (contentType: string, filename: string) => {
+    const extension = filename.split('.').pop()?.toLowerCase();
+
+    if (contentType.includes('image')) return <FileImageOutlined />;
+    if (contentType.includes('pdf')) return <FilePdfOutlined />;
+    if (contentType.includes('text')) return <FileTextOutlined />;
+    if (extension === 'zip' || extension === 'rar' || extension === '7z') return <FileZipOutlined />;
+    if (extension === 'doc' || extension === 'docx') return <FileWordOutlined />;
+    if (extension === 'xls' || extension === 'xlsx') return <FileExcelOutlined />;
+    if (extension === 'ppt' || extension === 'pptx') return <FilePptOutlined />;
+    if (extension === 'mp4' || extension === 'avi' || extension === 'mov') return <VideoCameraOutlined />;
+    if (extension === 'mp3' || extension === 'wav' || extension === 'flac') return <SoundOutlined />;
+    if (extension === 'exe' || extension === 'msi') return <SettingOutlined />;
+    if (extension === 'js' || extension === 'ts' || extension === 'py' || extension === 'java') return <CodeOutlined />;
+    if (extension === 'html' || extension === 'css' || extension === 'xml') return <CodeOutlined />;
+    if (extension === 'json' || extension === 'yaml' || extension === 'yml') return <CodeOutlined />;
+    if (extension === 'md') return <FileMarkdownOutlined />;
+    if (extension === 'txt') return <FileTextOutlined />;
+    if (extension === 'log') return <FileTextOutlined />;
+    if (extension === 'bak' || extension === 'tmp') return <FileOutlined />;
+    return <FileUnknownOutlined />;
+  };
+
+  const formatFilename = (filename: string) => {
+    // Remove the ID part from filename (format: name-id.extension -> name.extension)
+    const lastDashIndex = filename.lastIndexOf('-');
+    const lastDotIndex = filename.lastIndexOf('.');
+
+    if (lastDashIndex !== -1 && lastDotIndex > lastDashIndex) {
+      const name = filename.substring(0, lastDashIndex);
+      const extension = filename.substring(lastDotIndex);
+      return name + extension;
+    }
+
+    return filename;
+  };
+
+  if (loading) {
+    return (
+      <div style={{
+        padding: token.paddingXL,
+        textAlign: 'center',
+        color: token.colorTextSecondary,
+        fontFamily: token.fontFamily
+      }}>
+        <Text>LOADING FILES...</Text>
+      </div>
+    );
+  }
+
+  if (files.length === 0) {
+    return (
+      <div style={{
+        padding: token.paddingXL,
+        textAlign: 'center',
+        color: token.colorTextSecondary,
+        fontFamily: token.fontFamily
+      }}>
+        <Text>NO FILES FOUND IN THIS LOCATION</Text>
+        <br />
+        <Text style={{ fontSize: token.fontSizeSM }}>UPLOAD FILES TO GET STARTED</Text>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      padding: token.paddingMD,
+      maxHeight: 'calc(100vh - 300px)',
+      overflowY: 'auto'
+    }}>
+      {files.map((file) => (
+        <div
+          key={file.id}
+          style={{
+            background: token.colorBgContainer,
+            border: `1px solid ${token.colorBorder}`,
+            borderRadius: token.borderRadius,
+            padding: `${token.paddingSM}px ${token.paddingMD}px`,
+            marginBottom: token.marginSM,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontFamily: token.fontFamily
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = token.colorPrimary;
+            e.currentTarget.style.background = token.colorBgElevated;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = token.colorBorder;
+            e.currentTarget.style.background = token.colorBgContainer;
+          }}
+        >
+          {/* Checkbox for bulk selection */}
+          <Checkbox
+            checked={selectedFileIds.has(file.id)}
+            onChange={(e) => {
+              e.stopPropagation();
+              onFileSelect(file.id, e.target.checked);
+            }}
+            style={{
+              marginRight: token.marginSM,
+              transform: 'scale(1.2)',
+              filter: 'brightness(1.2) contrast(1.2)'
+            }}
+            className="custom-checkbox"
+          />
+
+          {/* File Icon and Name */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            flex: 1,
+            minWidth: 0
+          }}>
+            <span style={{
+              fontSize: '20px',
+              marginRight: token.marginSM
+            }}>
+              {getFileIcon(file.contentType, file.filename)}
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Text style={{
+                color: token.colorText,
+                fontSize: token.fontSizeSM,
+                fontWeight: 'bold',
+                display: 'block',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {formatFilename(file.filename)}
+              </Text>
+            </div>
+          </div>
+
+          {/* File Type and Location */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: token.marginLG,
+            marginRight: token.marginLG
+          }}>
+            <div style={{
+              padding: `2px ${token.paddingSM}px`,
+              background: token.colorBgElevated,
+              border: `1px solid ${token.colorBorder}`,
+              borderRadius: token.borderRadiusSM,
+              fontSize: token.fontSizeSM,
+              color: token.colorPrimary,
+              fontFamily: token.fontFamily
+            }}>
+              {file.contentType.split('/')[1]?.toUpperCase() || 'UNKNOWN'}
+            </div>
+            <div style={{
+              fontSize: token.fontSizeSM,
+              color: token.colorInfo,
+              fontFamily: token.fontFamily
+            }}>
+              {file.location || 'Root'}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{
+            display: 'flex',
+            gap: token.marginXS
+          }}>
+            <Button
+              size="small"
+              type="text"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPreview(file);
+              }}
+              style={{
+                color: token.colorPrimary,
+                fontFamily: token.fontFamily,
+                fontSize: token.fontSizeSM,
+                padding: '2px 6px'
+              }}
+            >
+              VIEW
+            </Button>
+            <Button
+              size="small"
+              type="text"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDownload(file);
+              }}
+              style={{
+                color: token.colorInfo,
+                fontFamily: token.fontFamily,
+                fontSize: token.fontSizeSM,
+                padding: '2px 6px'
+              }}
+            >
+              DOWNLOAD
+            </Button>
+            <Button
+              size="small"
+              type="text"
+              danger
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(file);
+              }}
+              style={{
+                fontFamily: token.fontFamily,
+                fontSize: token.fontSizeSM,
+                padding: '2px 6px'
+              }}
+            >
+              DELETE
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Custom Tree Component with Tooltips
+const CustomTree: React.FC<{ treeData: any[]; onSelect: (selectedKeys: Key[]) => void }> = ({ treeData, onSelect }) => {
+  const { token } = theme.useToken();
+
+  const renderTreeNode = (node: any) => {
+    const title = node.fullTitle ? (
+      <Tooltip title={node.fullTitle} placement="right">
+        <span style={{
+          display: 'block',
+          width: '100%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          {node.title}
+        </span>
+      </Tooltip>
+    ) : node.title;
+
+    return {
+      ...node,
+      title,
+      children: node.children ? node.children.map(renderTreeNode) : undefined
+    };
+  };
+
+  const processedTreeData = treeData.map(renderTreeNode);
+
+  // Get all keys for expanded state
+  const getAllKeys = (nodes: any[]): string[] => {
+    const keys: string[] = [];
+    nodes.forEach(node => {
+      if (node.children && node.children.length > 0) {
+        keys.push(node.key);
+        keys.push(...getAllKeys(node.children));
+      }
+    });
+    return keys;
+  };
+
+  const expandedKeys = getAllKeys(processedTreeData);
+
+  return (
+    <Tree
+      treeData={processedTreeData}
+      onSelect={onSelect}
+      showIcon
+      showLine={{ showLeafIcon: false }}
+      expandedKeys={expandedKeys}
+      style={{
+        fontFamily: token.fontFamily,
+        fontSize: token.fontSizeSM,
+        background: 'transparent'
+      }}
+      className="custom-tree"
+    />
+  );
+};
 
 const Dashboard: React.FC = () => {
+  const { token } = theme.useToken();
+  const { logout, user } = useAuth();
+  const [currentLocation, setCurrentLocation] = useState<string>('');
+  const [files, setFiles] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [folderTree, setFolderTree] = useState<any[]>([]);
+  const [uploadModalVisible, setUploadModalVisible] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [currentUploadFile, setCurrentUploadFile] = useState('');
+  const [uploadForm] = Form.useForm();
+
+  // Bulk delete state
+  const [selectedFileIds, setSelectedFileIds] = useState<Set<number>>(new Set());
+  const [bulkDeleteModalVisible, setBulkDeleteModalVisible] = useState(false);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
+  const [bulkDeleteProgress, setBulkDeleteProgress] = useState(0);
+  const [currentDeletingFile, setCurrentDeletingFile] = useState('');
+
+  // Preview state variables
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+  const [previewTitle, setPreviewTitle] = useState('');
+  const [pdfPreviewVisible, setPdfPreviewVisible] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState('');
+  const [pdfPreviewTitle, setPdfPreviewTitle] = useState('');
+  const [textPreviewVisible, setTextPreviewVisible] = useState(false);
+  const [textPreviewContent, setTextPreviewContent] = useState('');
+  const [textPreviewTitle, setTextPreviewTitle] = useState('');
+  const [unsupportedFileModalVisible, setUnsupportedFileModalVisible] = useState(false);
+  const [unsupportedFileItem, setUnsupportedFileItem] = useState<Item | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  // Helper function to get original filename
+  const getOriginalFilename = (filename: string) => {
+    const lastDashIndex = filename.lastIndexOf('-');
+    const lastDotIndex = filename.lastIndexOf('.');
+
+    if (lastDashIndex !== -1 && lastDotIndex > lastDashIndex) {
+      const name = filename.substring(0, lastDashIndex);
+      const extension = filename.substring(lastDotIndex);
+      return name + extension;
+    }
+
+    return filename;
+  };
+
+  // Load files from API
+  const loadFiles = async () => {
+    try {
+      setLoading(true);
+      const items = await itemsAPI.getMyItems();
+      setFiles(items);
+
+      // Build folder tree from actual file locations
+      const locations = new Set<string>();
+      items.forEach(item => {
+        if (item.location) {
+          locations.add(item.location);
+        }
+      });
+
+      const treeData = [
+        {
+          title: 'ROOT',
+          key: '',
+          icon: <HomeOutlined style={{ color: '#00ff88' }} />,
+          children: Array.from(locations).sort().map(location => ({
+            title: location.length > 20 ? location.substring(0, 17) + '...' : location,
+            key: location,
+            icon: <FolderOutlined style={{ color: '#ffaa00' }} />,
+            fullTitle: location // Store full title for tooltip
+          }))
+        }
+      ];
+
+      setFolderTree(treeData);
+    } catch (error) {
+      console.error('Failed to load files:', error);
+      message.error('Failed to load files. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadFiles();
+  }, []);
+
+  const handleFolderSelect = (selectedKeys: Key[]) => {
+    if (selectedKeys.length > 0) {
+      setCurrentLocation(selectedKeys[0] as string);
+    }
+  };
+
+  const handlePreview = async (file: Item) => {
+    setPreviewLoading(true);
+
+    // Immediately open the appropriate modal based on file type
+    if (file.contentType.startsWith('image/')) {
+      setPreviewTitle(getOriginalFilename(file.filename));
+      setPreviewVisible(true);
+    } else if (file.contentType === 'application/pdf' || file.filename.toLowerCase().endsWith('.pdf')) {
+      setPdfPreviewTitle(getOriginalFilename(file.filename));
+      setPdfPreviewVisible(true);
+    } else if (file.contentType.startsWith('text/') ||
+               file.contentType === 'application/json' ||
+               file.contentType === 'application/xml' ||
+               file.filename.endsWith('.txt') ||
+               file.filename.endsWith('.json') ||
+               file.filename.endsWith('.xml') ||
+               file.filename.endsWith('.md')) {
+      setTextPreviewTitle(getOriginalFilename(file.filename));
+      setTextPreviewVisible(true);
+    } else {
+      console.log("unsupported file type", file.contentType);
+      message.warning(`Cannot preview ${getOriginalFilename(file.filename)}. This file type (${file.contentType}) cannot be previewed.`);
+      setUnsupportedFileItem(file);
+      setUnsupportedFileModalVisible(true);
+      return; // Don't load content for unsupported files
+    }
+
+    try {
+      const blob = await itemsAPI.downloadFile(file.id);
+
+      if (file.contentType.startsWith('image/')) {
+        const url = window.URL.createObjectURL(blob);
+        setPreviewImage(url);
+      } else if (file.contentType === 'application/pdf' || file.filename.toLowerCase().endsWith('.pdf')) {
+        const url = window.URL.createObjectURL(blob);
+        setPdfPreviewUrl(url);
+      } else if (file.contentType.startsWith('text/') ||
+                 file.contentType === 'application/json' ||
+                 file.contentType === 'application/xml' ||
+                 file.filename.endsWith('.txt') ||
+                 file.filename.endsWith('.json') ||
+                 file.filename.endsWith('.xml') ||
+                 file.filename.endsWith('.md')) {
+        const text = await blob.text();
+        setTextPreviewContent(text);
+      }
+    } catch (error: any) {
+      console.error('Preview error:', error);
+      message.error(`Failed to preview ${file.filename}: ${error.message || 'Unknown error'}`);
+      // Close the modal on error
+      setPreviewVisible(false);
+      setPdfPreviewVisible(false);
+      setTextPreviewVisible(false);
+      setPreviewImage('');
+      setPdfPreviewUrl('');
+      setTextPreviewContent('');
+      setPreviewTitle('');
+      setPdfPreviewTitle('');
+      setTextPreviewTitle('');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleDownload = async (file: Item) => {
+    try {
+      const blob = await itemsAPI.downloadFile(file.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = getOriginalFilename(file.filename);
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      message.success(`Downloaded: ${getOriginalFilename(file.filename)}`);
+    } catch (error) {
+      console.error('Download failed:', error);
+      message.error(`Failed to download ${getOriginalFilename(file.filename)}`);
+    }
+  };
+
+  const handleDelete = async (file: Item) => {
+    try {
+      await itemsAPI.deleteItem(file.id);
+      setFiles(files.filter(f => f.id !== file.id));
+      message.success(`Deleted: ${file.filename}`);
+    } catch (error) {
+      console.error('Delete failed:', error);
+      message.error(`Failed to delete ${file.filename}`);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  // Upload handlers
+  const handleUploadModalOpen = () => {
+    setUploadModalVisible(true);
+    setSelectedFiles([]);
+    setUploadProgress(0);
+    setCurrentUploadFile('');
+    uploadForm.resetFields();
+    uploadForm.setFieldsValue({ location: currentLocation });
+  };
+
+  const handleUploadModalClose = () => {
+    setUploadModalVisible(false);
+    setSelectedFiles([]);
+    setUploadProgress(0);
+    setCurrentUploadFile('');
+    setUploadLoading(false);
+    uploadForm.resetFields();
+  };
+
+  const handleUpload = async (values: any) => {
+    if (selectedFiles.length === 0) {
+      message.error('Please select files');
+      return;
+    }
+
+    setUploadLoading(true);
+    setUploadProgress(0);
+
+    try {
+      const totalFiles = selectedFiles.length;
+      let completedFiles = 0;
+      const results: any[] = [];
+
+      for (const file of selectedFiles) {
+        try {
+          // Update progress for current file
+          const fileProgress = (completedFiles / totalFiles) * 100;
+          setUploadProgress(Math.round(fileProgress));
+          setCurrentUploadFile(file.name);
+
+          // Upload single file
+          const result = await itemsAPI.uploadFile(values.location, file);
+          results.push(result);
+          completedFiles++;
+
+          // Show progress for each file
+          message.success(`Uploaded: ${getOriginalFilename(file.name)}`);
+
+        } catch (error: any) {
+          console.error(`Upload error for ${file.name}:`, error);
+          message.error(`Failed to upload ${getOriginalFilename(file.name)}: ${error.message || 'Unknown error'}`);
+          // Continue with next file even if one fails
+        }
+      }
+
+      setUploadProgress(100);
+
+      setTimeout(() => {
+        const successCount = results.length;
+        const failedCount = totalFiles - successCount;
+
+        if (failedCount === 0) {
+          message.success(`All ${totalFiles} files uploaded successfully!`);
+        } else {
+          message.warning(`${successCount} files uploaded, ${failedCount} failed`);
+        }
+
+        handleUploadModalClose();
+        loadFiles();
+      }, 500);
+
+    } catch (error: any) {
+      setUploadProgress(0);
+      setCurrentUploadFile('');
+      console.error('Upload error:', error);
+      message.error('Upload failed: Please try again');
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  // Filter files by current location
+  const filteredFiles = currentLocation
+    ? files.filter(file => file.location === currentLocation)
+    : files;
+
+  // Bulk delete handlers
+  const handleFileSelect = (fileId: number, selected: boolean) => {
+    setSelectedFileIds(prev => {
+      const newSet = new Set(prev);
+      if (selected) {
+        newSet.add(fileId);
+      } else {
+        newSet.delete(fileId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedFileIds.size === 0) {
+      message.warning('Please select files to delete');
+      return;
+    }
+
+    setBulkDeleteModalVisible(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      setBulkDeleteLoading(true);
+      setBulkDeleteProgress(0);
+      setCurrentDeletingFile('');
+
+      const fileIdsArray = Array.from(selectedFileIds);
+      const totalFiles = fileIdsArray.length;
+      let deletedCount = 0;
+
+      for (let i = 0; i < fileIdsArray.length; i++) {
+        const fileId = fileIdsArray[i];
+        const file = files.find(f => f.id === fileId);
+
+        try {
+          // Update progress
+          const progress = Math.round(((i + 1) / totalFiles) * 100);
+          setBulkDeleteProgress(progress);
+          setCurrentDeletingFile(file ? getOriginalFilename(file.filename) : `File ${fileId}`);
+
+          await itemsAPI.deleteItem(fileId);
+          deletedCount++;
+        } catch (error) {
+          console.error(`Failed to delete file ${fileId}:`, error);
+        }
+      }
+
+      // Update the files state
+      setFiles(prev => prev.filter(file => !selectedFileIds.has(file.id)));
+
+      // Clear selection
+      setSelectedFileIds(new Set());
+
+      if (deletedCount === totalFiles) {
+        message.success(`Successfully deleted ${deletedCount} files`);
+      } else {
+        message.warning(`Deleted ${deletedCount} out of ${totalFiles} files`);
+      }
+
+      setBulkDeleteModalVisible(false);
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      message.error('Failed to delete some files. Please try again.');
+    } finally {
+      setBulkDeleteLoading(false);
+      setBulkDeleteProgress(0);
+      setCurrentDeletingFile('');
+    }
+  };
+
+  const handleSelectAll = () => {
+    const allFileIds = new Set(filteredFiles.map(file => file.id));
+    setSelectedFileIds(allFileIds);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedFileIds(new Set());
+  };
+
   return (
-    <div className="dashboard">
-      <FileManager />
-    </div>
+    <Layout style={{
+      minHeight: '100vh',
+      background: '#000',
+      position: 'relative'
+    }}>
+      {/* Header */}
+      <Header style={{
+        background: '#000',
+        borderBottom: `2px solid ${token.colorPrimary}`,
+        padding: `0 ${token.paddingXL}px`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: 'auto',
+        minHeight: '120px'
+      }}>
+        <div style={{ flex: 1 }}>
+          <pre style={{
+            fontFamily: token.fontFamily,
+            fontSize: '10px',
+            lineHeight: 1.2,
+            color: token.colorPrimary,
+            margin: 0,
+            whiteSpace: 'pre'
+          }}>
+            {ASCII_HEADER}
+          </pre>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: token.marginMD
+        }}>
+          <div style={{
+            padding: `${token.paddingSM}px ${token.paddingMD}px`,
+            background: token.colorBgContainer,
+            borderRadius: token.borderRadius,
+            color: token.colorTextSecondary
+          }}>
+            USER: {user?.username || 'UNKNOWN'}
+          </div>
+
+          <Button
+            type="text"
+            icon={<LogoutOutlined />}
+            onClick={handleLogout}
+            style={{
+              color: token.colorError,
+              fontFamily: token.fontFamily,
+              fontWeight: 'bold',
+              outlineColor: token.colorError,
+              background: token.colorBgContainer,
+              borderRadius: token.borderRadius,
+              padding: `${token.paddingSM}px ${token.paddingMD}px`,
+              border: `1px solid ${token.colorBorder}`,
+              fontSize: token.fontSizeSM,
+            }}
+          >
+            LOGOUT
+          </Button>
+        </div>
+      </Header>
+
+      <Layout style={{ position: 'relative' }}>
+        {/* Sidebar */}
+        <Sider
+          width={250}
+          style={{
+            background: '#001100',
+            borderRight: `2px solid ${token.colorBorder}`,
+            position: 'relative'
+          }}
+          theme="dark"
+        >
+          <div style={{
+            padding: token.paddingLG,
+            borderBottom: `1px solid ${token.colorBorder}`,
+            background: token.colorBgContainer
+          }}>
+            <Title level={4} style={{
+              margin: 0,
+              color: token.colorPrimary,
+              fontFamily: token.fontFamily,
+              textAlign: 'center',
+              fontWeight: 'bold'
+            }}>
+              LOCATIONS
+            </Title>
+          </div>
+
+          <div style={{
+            padding: token.paddingMD,
+            height: 'calc(100vh - 200px)',
+            overflowY: 'auto'
+          }}>
+            <CustomTree treeData={folderTree} onSelect={handleFolderSelect} />
+          </div>
+        </Sider>
+
+        {/* Main Content */}
+        <Content style={{
+          background: '#000',
+          padding: token.paddingLG,
+          position: 'relative'
+        }}>
+          <div style={{
+            background: token.colorBgElevated,
+            border: `2px solid ${token.colorBorder}`,
+            borderRadius: token.borderRadius,
+            minHeight: 'calc(100vh - 200px)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* Content Header */}
+            <div style={{
+              padding: `${token.paddingLG}px ${token.paddingXL}px`,
+              borderBottom: `1px solid ${token.colorBorder}`,
+              background: token.colorBgContainer,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <Title level={4} style={{
+                  margin: 0,
+                  color: token.colorPrimary,
+                  fontFamily: token.fontFamily,
+                  fontWeight: 'bold'
+                }}>
+                  <FileTextOutlined style={{ marginRight: token.marginSM }} />
+                  FILES: {currentLocation || 'ROOT'}
+                </Title>
+                <Text style={{
+                  color: token.colorTextSecondary,
+                  fontFamily: token.fontFamily,
+                  fontSize: token.fontSizeSM,
+                  display: 'block',
+                  marginTop: token.marginXS
+                }}>
+                  {filteredFiles.length} files found
+                  {selectedFileIds.size > 0 && (
+                    <span style={{ color: token.colorPrimary, fontWeight: 'bold' }}>
+                      {' '}({selectedFileIds.size} selected)
+                    </span>
+                  )}
+                </Text>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: token.marginMD
+              }}>
+                {/* Bulk Delete Button */}
+                {selectedFileIds.size > 0 && (
+                  <Button
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={handleBulkDelete}
+                    style={{
+                      fontFamily: token.fontFamily,
+                      fontWeight: 'bold',
+                      background: token.colorError,
+                      borderColor: token.colorError,
+                      color: '#fff',
+                      boxShadow: '0 2px 4px rgba(255, 77, 79, 0.3)'
+                    }}
+                  >
+                    DELETE ({selectedFileIds.size})
+                  </Button>
+                )}
+
+                {/* Selection Controls */}
+                {filteredFiles.length > 0 && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: token.marginSM,
+                    padding: `${token.paddingSM}px ${token.paddingMD}px`,
+                    background: token.colorBgElevated,
+                    border: `1px solid ${token.colorBorder}`,
+                    borderRadius: token.borderRadius
+                  }}>
+                    <Button
+                      size="small"
+                      type="text"
+                      onClick={handleSelectAll}
+                      style={{
+                        fontFamily: token.fontFamily,
+                        fontSize: token.fontSizeSM,
+                        color: token.colorPrimary
+                      }}
+                    >
+                      SELECT ALL
+                    </Button>
+                    <Button
+                      size="small"
+                      type="text"
+                      onClick={handleClearSelection}
+                      style={{
+                        fontFamily: token.fontFamily,
+                        fontSize: token.fontSizeSM,
+                        color: token.colorTextSecondary
+                      }}
+                    >
+                      CLEAR
+                    </Button>
+                  </div>
+                )}
+
+                <Button
+                  type="primary"
+                  icon={<UploadOutlined />}
+                  onClick={handleUploadModalOpen}
+                  style={{
+                    fontFamily: token.fontFamily,
+                    fontWeight: 'bold',
+                    background: token.colorPrimary,
+                    borderColor: token.colorPrimary
+                  }}
+                >
+                  UPLOAD FILES
+                </Button>
+
+                <div style={{
+                  padding: `${token.paddingSM}px ${token.paddingMD}px`,
+                  background: token.colorBgContainer,
+                  border: `1px solid ${token.colorBorder}`,
+                  borderRadius: token.borderRadius
+                }}>
+                  <Text style={{
+                    color: token.colorSuccess,
+                    fontFamily: token.fontFamily,
+                    fontSize: token.fontSizeSM,
+                    fontWeight: 'bold'
+                  }}>
+                    <DatabaseOutlined style={{ marginRight: token.marginXS }} />
+                    SYSTEM ONLINE
+                  </Text>
+                </div>
+              </div>
+            </div>
+
+            {/* File Grid */}
+            <FileGrid
+              files={filteredFiles}
+              onPreview={handlePreview}
+              onDownload={handleDownload}
+              onDelete={handleDelete}
+              loading={loading}
+              selectedFileIds={selectedFileIds}
+              onFileSelect={handleFileSelect}
+            />
+          </div>
+        </Content>
+      </Layout>
+
+      {/* Upload Modal */}
+      <Modal
+        title={
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: token.marginSM,
+            fontFamily: token.fontFamily,
+            color: token.colorPrimary,
+            fontWeight: 'bold'
+          }}>
+            <UploadOutlined />
+            UPLOAD FILES
+          </div>
+        }
+        open={uploadModalVisible}
+        onCancel={handleUploadModalClose}
+        footer={null}
+        width={600}
+        style={{
+          fontFamily: token.fontFamily
+        }}
+        bodyStyle={{
+          padding: token.paddingLG
+        }}
+      >
+        <Form
+          form={uploadForm}
+          layout="vertical"
+          onFinish={handleUpload}
+          initialValues={{ location: currentLocation }}
+        >
+          <Form.Item
+            name="location"
+            label={
+              <Text style={{
+                color: token.colorPrimary,
+                fontFamily: token.fontFamily,
+                fontWeight: 'bold'
+              }}>
+                LOCATION
+              </Text>
+            }
+            rules={[{ required: true, message: 'Please enter a location!' }]}
+          >
+            <Input
+              placeholder="e.g., documents, photos, etc."
+              style={{
+                fontFamily: token.fontFamily,
+                background: token.colorBgContainer,
+                border: `1px solid ${token.colorBorder}`,
+                color: token.colorText
+              }}
+              prefix={<FolderOutlined style={{ color: token.colorPrimary }} />}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={
+              <Text style={{
+                color: token.colorPrimary,
+                fontFamily: token.fontFamily,
+                fontWeight: 'bold'
+              }}>
+                SELECT FILES
+              </Text>
+            }
+            required
+          >
+            <Dragger
+              beforeUpload={(file) => {
+                setSelectedFiles(prev => [...prev, file]);
+                return false;
+              }}
+              showUploadList={false}
+              accept="*/*"
+              multiple
+              disabled={uploadLoading}
+            >
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined style={{ fontSize: '48px', color: token.colorPrimary }} />
+              </p>
+              <p className="ant-upload-text" style={{
+                color: token.colorText,
+                fontFamily: token.fontFamily,
+                fontSize: token.fontSizeLG,
+                fontWeight: 'bold'
+              }}>
+                Click or drag files to this area to upload
+              </p>
+              <p className="ant-upload-hint" style={{
+                color: token.colorTextSecondary,
+                fontFamily: token.fontFamily,
+                fontSize: token.fontSizeSM
+              }}>
+                Support for multiple file uploads. Files will be uploaded to the selected location.
+              </p>
+            </Dragger>
+
+            {selectedFiles.length > 0 && (
+              <div style={{
+                marginTop: token.marginMD,
+                padding: token.paddingMD,
+                background: token.colorBgElevated,
+                border: `1px solid ${token.colorSuccess}`,
+                borderRadius: token.borderRadius
+              }}>
+                <div style={{
+                  fontFamily: token.fontFamily,
+                  color: token.colorSuccess,
+                  fontWeight: 'bold',
+                  marginBottom: token.marginSM
+                }}>
+                  SELECTED FILES ({selectedFiles.length}):
+                </div>
+                {selectedFiles.map((file, index) => (
+                  <div key={index} style={{
+                    fontSize: token.fontSizeSM,
+                    marginBottom: token.marginXS,
+                    padding: `${token.paddingXS}px ${token.paddingSM}px`,
+                    background: token.colorBgContainer,
+                    border: `1px solid ${token.colorBorder}`,
+                    borderRadius: token.borderRadiusSM,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontFamily: token.fontFamily
+                  }}>
+                    <span style={{ color: token.colorText }}>
+                      {getOriginalFilename(file.name)} ({Math.round(file.size / 1024)} KB)
+                    </span>
+                    <Tooltip title="Remove this file">
+                      <Button
+                        type="text"
+                        size="small"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== index))}
+                        style={{
+                          padding: '0 4px',
+                          minWidth: 'auto',
+                          fontFamily: token.fontFamily
+                        }}
+                      />
+                    </Tooltip>
+                  </div>
+                ))}
+                <div style={{
+                  fontSize: token.fontSizeSM,
+                  marginTop: token.marginSM,
+                  padding: `${token.paddingXS}px ${token.paddingSM}px`,
+                  background: token.colorBgContainer,
+                  border: `1px solid ${token.colorInfo}`,
+                  borderRadius: token.borderRadiusSM,
+                  textAlign: 'center',
+                  fontFamily: token.fontFamily,
+                  color: token.colorInfo,
+                  fontWeight: 'bold'
+                }}>
+                  TOTAL SIZE: {Math.round(selectedFiles.reduce((sum, file) => sum + file.size, 0) / 1024)} KB
+                </div>
+                <Button
+                  type="text"
+                  size="small"
+                  onClick={() => setSelectedFiles([])}
+                  style={{
+                    marginTop: token.marginSM,
+                    fontFamily: token.fontFamily,
+                    color: token.colorWarning
+                  }}
+                >
+                  CLEAR ALL
+                </Button>
+              </div>
+            )}
+          </Form.Item>
+
+          {uploadProgress > 0 && (
+            <Form.Item
+              label={
+                <Text style={{
+                  color: token.colorPrimary,
+                  fontFamily: token.fontFamily,
+                  fontWeight: 'bold'
+                }}>
+                  UPLOAD PROGRESS
+                </Text>
+              }
+            >
+              {currentUploadFile && (
+                <div style={{
+                  marginBottom: token.marginSM,
+                  fontSize: token.fontSizeSM,
+                  fontFamily: token.fontFamily,
+                  color: token.colorTextSecondary
+                }}>
+                  UPLOADING: {currentUploadFile}
+                </div>
+              )}
+              <Progress
+                percent={uploadProgress}
+                status={uploadProgress === 100 ? 'success' : 'active'}
+                strokeColor={token.colorPrimary}
+                style={{
+                  fontFamily: token.fontFamily
+                }}
+                format={(percent) => `${percent}% (${Math.round((uploadProgress / 100) * selectedFiles.length)}/${selectedFiles.length} files)`}
+              />
+            </Form.Item>
+          )}
+
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={uploadLoading}
+              style={{
+                fontFamily: token.fontFamily,
+                fontWeight: 'bold',
+                width: '100%',
+                height: '40px'
+              }}
+              disabled={selectedFiles.length === 0}
+            >
+              {uploadLoading ? 'UPLOADING...' : `UPLOAD ${selectedFiles.length} FILE${selectedFiles.length !== 1 ? 'S' : ''}`}
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Image Preview Modal */}
+      <Modal
+        open={previewVisible}
+        title={
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: token.marginSM,
+            fontFamily: token.fontFamily,
+            color: token.colorPrimary,
+            fontWeight: 'bold'
+          }}>
+            <EyeOutlined />
+            {previewTitle}
+          </div>
+        }
+        footer={null}
+        onCancel={() => {
+          setPreviewVisible(false);
+          setPreviewImage('');
+          setPreviewTitle('');
+        }}
+        width={800}
+        style={{
+          fontFamily: token.fontFamily
+        }}
+      >
+        {previewLoading ? (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '400px',
+            background: token.colorBgContainer,
+            border: `1px solid ${token.colorBorder}`,
+            borderRadius: token.borderRadius
+          }}>
+            <div style={{
+              textAlign: 'center',
+              color: token.colorTextSecondary,
+              fontFamily: token.fontFamily
+            }}>
+              <div style={{
+                fontSize: '24px',
+                marginBottom: token.marginSM,
+                color: token.colorPrimary
+              }}>
+                <LoadingOutlined />
+              </div>
+              <Text>LOADING PREVIEW...</Text>
+            </div>
+          </div>
+        ) : (
+          <Image
+            alt={previewTitle}
+            style={{ width: '100%' }}
+            src={previewImage}
+            preview={false}
+            onLoad={() => {
+              // Clean up the blob URL when image loads
+              return () => {
+                if (previewImage) {
+                  window.URL.revokeObjectURL(previewImage);
+                }
+              };
+            }}
+          />
+        )}
+      </Modal>
+
+      {/* PDF Preview Modal */}
+      <Modal
+        open={pdfPreviewVisible}
+        title={
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: token.marginSM,
+            fontFamily: token.fontFamily,
+            color: token.colorPrimary,
+            fontWeight: 'bold'
+          }}>
+            <FileTextOutlined />
+            {pdfPreviewTitle}
+          </div>
+        }
+        footer={[
+          <Button
+            key="download"
+            icon={<DownloadOutlined />}
+            onClick={() => {
+              const a = document.createElement('a');
+              a.href = pdfPreviewUrl;
+              a.download = pdfPreviewTitle;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }}
+            style={{
+              fontFamily: token.fontFamily,
+              fontWeight: 'bold',
+              background: token.colorBgContainer,
+              borderColor: token.colorBorder,
+              color: token.colorText
+            }}
+          >
+            DOWNLOAD
+          </Button>
+        ]}
+        onCancel={() => {
+          setPdfPreviewVisible(false);
+          if (pdfPreviewUrl) {
+            window.URL.revokeObjectURL(pdfPreviewUrl);
+          }
+          setPdfPreviewUrl('');
+          setPdfPreviewTitle('');
+        }}
+        width={1000}
+        style={{
+          fontFamily: token.fontFamily
+        }}
+      >
+        {previewLoading ? (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '70vh',
+            background: token.colorBgContainer,
+            border: `1px solid ${token.colorBorder}`,
+            borderRadius: token.borderRadius
+          }}>
+            <div style={{
+              textAlign: 'center',
+              color: token.colorTextSecondary,
+              fontFamily: token.fontFamily
+            }}>
+              <div style={{
+                fontSize: '24px',
+                marginBottom: token.marginSM,
+                color: token.colorPrimary
+              }}>
+                <LoadingOutlined />
+              </div>
+              <Text>LOADING PDF...</Text>
+            </div>
+          </div>
+        ) : (
+          <iframe
+            src={pdfPreviewUrl}
+            style={{
+              width: '100%',
+              height: '70vh',
+              border: 'none'
+            }}
+            title={pdfPreviewTitle}
+          />
+        )}
+      </Modal>
+
+      {/* Text Preview Modal */}
+      <Modal
+        open={textPreviewVisible}
+        title={
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: token.marginSM,
+            fontFamily: token.fontFamily,
+            color: token.colorPrimary,
+            fontWeight: 'bold'
+          }}>
+            <FileTextOutlined />
+            {textPreviewTitle}
+          </div>
+        }
+        footer={[
+          <Button
+            key="download"
+            icon={<DownloadOutlined />}
+            onClick={() => {
+              const blob = new Blob([textPreviewContent], { type: 'text/plain' });
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = textPreviewTitle;
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+            }}
+            style={{
+              fontFamily: token.fontFamily,
+              fontWeight: 'bold',
+              background: token.colorBgContainer,
+              borderColor: token.colorBorder,
+              color: token.colorText
+            }}
+          >
+            DOWNLOAD
+          </Button>
+        ]}
+        onCancel={() => {
+          setTextPreviewVisible(false);
+          setTextPreviewContent('');
+          setTextPreviewTitle('');
+        }}
+        width={800}
+        style={{
+          fontFamily: token.fontFamily
+        }}
+      >
+        {previewLoading ? (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '60vh',
+            background: token.colorBgContainer,
+            border: `1px solid ${token.colorBorder}`,
+            borderRadius: token.borderRadius
+          }}>
+            <div style={{
+              textAlign: 'center',
+              color: token.colorTextSecondary,
+              fontFamily: token.fontFamily
+            }}>
+              <div style={{
+                fontSize: '24px',
+                marginBottom: token.marginSM,
+                color: token.colorPrimary
+              }}>
+                <LoadingOutlined />
+              </div>
+              <Text>LOADING TEXT...</Text>
+            </div>
+          </div>
+        ) : (
+          <div style={{
+            maxHeight: '60vh',
+            overflowY: 'auto',
+            background: token.colorBgContainer,
+            border: `1px solid ${token.colorBorder}`,
+            borderRadius: token.borderRadius,
+            padding: token.paddingMD,
+            fontFamily: 'monospace',
+            fontSize: token.fontSizeSM,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            color: token.colorText
+          }}>
+            {textPreviewContent}
+          </div>
+        )}
+      </Modal>
+
+      {/* Unsupported File Modal */}
+      <Modal
+        open={unsupportedFileModalVisible}
+        title={
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: token.marginSM,
+            fontFamily: token.fontFamily,
+            color: token.colorWarning,
+            fontWeight: 'bold'
+          }}>
+            <FileTextOutlined />
+            UNSUPPORTED FILE TYPE
+          </div>
+        }
+        footer={[
+          <Button
+            key="download"
+            icon={<DownloadOutlined />}
+            onClick={() => {
+              if (unsupportedFileItem) {
+                handleDownload(unsupportedFileItem);
+              }
+              setUnsupportedFileModalVisible(false);
+              setUnsupportedFileItem(null);
+            }}
+            style={{
+              fontFamily: token.fontFamily,
+              fontWeight: 'bold',
+              background: token.colorBgContainer,
+              borderColor: token.colorBorder,
+              color: token.colorText
+            }}
+          >
+            DOWNLOAD FILE
+          </Button>
+        ]}
+        onCancel={() => {
+          setUnsupportedFileModalVisible(false);
+          setUnsupportedFileItem(null);
+        }}
+        width={500}
+        style={{
+          fontFamily: token.fontFamily
+        }}
+      >
+        <div style={{
+          textAlign: 'center',
+          padding: token.paddingLG
+        }}>
+          <FileTextOutlined style={{
+            fontSize: '48px',
+            color: token.colorWarning,
+            marginBottom: token.marginMD
+          }} />
+          <Text style={{
+            display: 'block',
+            marginBottom: token.marginSM,
+            fontFamily: token.fontFamily,
+            fontWeight: 'bold',
+            color: token.colorText
+          }}>
+            {unsupportedFileItem ? getOriginalFilename(unsupportedFileItem.filename) : ''}
+          </Text>
+          <Text style={{
+            color: token.colorTextSecondary,
+            fontFamily: token.fontFamily,
+            fontSize: token.fontSizeSM
+          }}>
+            This file type ({unsupportedFileItem?.contentType}) cannot be previewed in the browser.
+            <br />
+            You can download the file to view it with an appropriate application.
+          </Text>
+        </div>
+      </Modal>
+
+      {/* Bulk Delete Confirmation Modal */}
+      <Modal
+        open={bulkDeleteModalVisible}
+        title={
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: token.marginSM,
+            fontFamily: token.fontFamily,
+            color: token.colorWarning,
+            fontWeight: 'bold'
+          }}>
+            <FileTextOutlined />
+            CONFIRM BULK DELETE
+          </div>
+        }
+        footer={[
+          <Button
+            key="cancel"
+            icon={<DeleteOutlined />}
+            onClick={() => {
+              setBulkDeleteModalVisible(false);
+            }}
+            disabled={bulkDeleteLoading}
+            style={{
+              fontFamily: token.fontFamily,
+              fontWeight: 'bold',
+              background: token.colorBgContainer,
+              borderColor: token.colorBorder,
+              color: token.colorText
+            }}
+          >
+            CANCEL
+          </Button>,
+          <Button
+            key="confirm"
+            icon={<DeleteOutlined />}
+            onClick={confirmBulkDelete}
+            loading={bulkDeleteLoading}
+            disabled={bulkDeleteLoading}
+            style={{
+              fontFamily: token.fontFamily,
+              fontWeight: 'bold',
+              background: token.colorError,
+              borderColor: token.colorError,
+              color: token.colorBgContainer
+            }}
+          >
+            {bulkDeleteLoading ? 'DELETING...' : 'CONFIRM'}
+          </Button>
+        ]}
+        onCancel={() => {
+          if (!bulkDeleteLoading) {
+            setBulkDeleteModalVisible(false);
+          }
+        }}
+        width={500}
+        style={{
+          fontFamily: token.fontFamily
+        }}
+      >
+        <div style={{
+          textAlign: 'center',
+          padding: token.paddingLG
+        }}>
+          <FileTextOutlined style={{
+            fontSize: '48px',
+            color: token.colorWarning,
+            marginBottom: token.marginMD
+          }} />
+          <Text style={{
+            display: 'block',
+            marginBottom: token.marginSM,
+            fontFamily: token.fontFamily,
+            fontWeight: 'bold',
+            color: token.colorText
+          }}>
+            Are you sure you want to delete {selectedFileIds.size} files?
+          </Text>
+          <Text style={{
+            color: token.colorTextSecondary,
+            fontFamily: token.fontFamily,
+            fontSize: token.fontSizeSM,
+            marginBottom: token.marginLG
+          }}>
+            This action cannot be undone.
+          </Text>
+
+          {bulkDeleteLoading && (
+            <div style={{
+              marginTop: token.marginLG,
+              textAlign: 'left'
+            }}>
+              {currentDeletingFile && (
+                <div style={{
+                  marginBottom: token.marginSM,
+                  fontSize: token.fontSizeSM,
+                  fontFamily: token.fontFamily,
+                  color: token.colorTextSecondary
+                }}>
+                  DELETING: {currentDeletingFile}
+                </div>
+              )}
+              <Progress
+                percent={bulkDeleteProgress}
+                status={bulkDeleteProgress === 100 ? 'success' : 'active'}
+                strokeColor={token.colorError}
+                style={{
+                  fontFamily: token.fontFamily
+                }}
+                format={(percent) => `${percent}% (${Math.round((bulkDeleteProgress / 100) * selectedFileIds.size)}/${selectedFileIds.size} files)`}
+              />
+            </div>
+          )}
+        </div>
+      </Modal>
+    </Layout>
   );
 };
 

@@ -17,10 +17,10 @@ import {
   Progress,
   Tooltip,
   Badge,
-  Form
+  Form,
+  theme
 } from 'antd';
 import {
-  UploadOutlined,
   DownloadOutlined,
   DeleteOutlined,
   EyeOutlined,
@@ -29,7 +29,6 @@ import {
   FolderOutlined,
   HomeOutlined,
   ReloadOutlined,
-  SearchOutlined,
   CloudUploadOutlined,
   FileZipOutlined,
   FilePdfOutlined,
@@ -40,7 +39,6 @@ import {
 } from '@ant-design/icons';
 import { itemsAPI } from '../services/api';
 import type { Item } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
 import type { Key } from 'antd/es/table/interface';
 
 const { Text } = Typography;
@@ -54,28 +52,22 @@ interface TreeNode {
   icon?: React.ReactNode;
 }
 
-// Helper function to extract original filename by removing ID suffix
 const getOriginalFilename = (filename: string): string => {
-  // Pattern: <name>-<some_id>.<extension>
-  // Remove the ID part before the last dot
   const lastDotIndex = filename.lastIndexOf('.');
-  if (lastDotIndex === -1) return filename; // No extension found
+  if (lastDotIndex === -1) return filename;
 
   const extension = filename.substring(lastDotIndex);
   const nameWithId = filename.substring(0, lastDotIndex);
 
-  // Find the last dash followed by what looks like an ID
   const lastDashIndex = nameWithId.lastIndexOf('-');
-  if (lastDashIndex === -1) return filename; // No dash found
+  if (lastDashIndex === -1) return filename;
 
-  // Check if what follows the dash looks like an ID (alphanumeric)
   const potentialId = nameWithId.substring(lastDashIndex + 1);
   if (/^[a-zA-Z0-9]+$/.test(potentialId)) {
-    // It's likely an ID, remove it
     return nameWithId.substring(0, lastDashIndex) + extension;
   }
 
-  return filename; // No ID pattern found, return original
+  return filename;
 };
 
 const FileManager: React.FC = () => {
@@ -97,14 +89,14 @@ const FileManager: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [folderTree, setFolderTree] = useState<TreeNode[]>([]);
-  const [expandedKeys, setExpandedKeys] = useState<Key[]>([ "" ]);
-  const { logout, user } = useAuth();
+  const [expandedKeys, setExpandedKeys] = useState<Key[]>([""]);
   const [pdfPreviewVisible, setPdfPreviewVisible] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState('');
   const [pdfPreviewTitle, setPdfPreviewTitle] = useState('');
   const [currentUploadFile, setCurrentUploadFile] = useState<string>('');
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
+  const { token } = theme.useToken();
 
   // Load user's items
   const loadItems = async () => {
@@ -115,7 +107,16 @@ const FileManager: React.FC = () => {
       setFilteredItems(data);
       buildFolderTree(data);
     } catch (error: any) {
-      message.error('Failed to load files');
+      message.error({
+        content: 'Failed to load files',
+        icon: <ReloadOutlined />,
+        style: {
+          background: token.colorBgElevated,
+          border: `1px solid ${token.colorError}`,
+          color: token.colorError,
+          fontFamily: token.fontFamily
+        }
+      });
     } finally {
       setLoading(false);
     }
@@ -129,7 +130,7 @@ const FileManager: React.FC = () => {
     folderMap.set('', {
       title: 'Root',
       key: '',
-      icon: <HomeOutlined className="file-icon folder" />,
+      icon: <HomeOutlined style={{ color: token.colorPrimary }} />,
       children: []
     });
 
@@ -146,7 +147,7 @@ const FileManager: React.FC = () => {
           folderMap.set(currentPath, {
             title: part,
             key: currentPath,
-            icon: <FolderOutlined className="file-icon folder" />,
+            icon: <FolderOutlined style={{ color: token.colorWarning }} />,
             children: []
           });
 
@@ -169,10 +170,8 @@ const FileManager: React.FC = () => {
       const selectedPath = selectedKeys[0] as string;
       setCurrentLocation(selectedPath);
       if (selectedPath === '') {
-        // Show all files when Root is selected
         setFilteredItems(items);
       } else {
-        // Filter by specific location
         filterItemsByLocation(selectedPath);
       }
     }
@@ -199,54 +198,32 @@ const FileManager: React.FC = () => {
 
   // Get file icon based on content type and extension
   const getFileIcon = (item: Item) => {
-    const { contentType, filename } = item;
-    const extension = filename.split('.').pop()?.toLowerCase();
+    const extension = item.filename.split('.').pop()?.toLowerCase();
+    const contentType = item.contentType.toLowerCase();
 
-    if (contentType.startsWith('image/')) {
-      return <FileImageOutlined className="file-icon image" />;
-    }
-
-    switch (extension) {
-      case 'pdf':
-        return <FilePdfOutlined className="file-icon pdf" />;
-      case 'doc':
-      case 'docx':
-        return <FileWordOutlined className="file-icon text" />;
-      case 'xls':
-      case 'xlsx':
-        return <FileExcelOutlined className="file-icon text" />;
-      case 'ppt':
-      case 'pptx':
-        return <FilePptOutlined className="file-icon text" />;
-      case 'zip':
-      case 'rar':
-      case '7z':
-        return <FileZipOutlined className="file-icon text" />;
-      case 'js':
-      case 'ts':
-      case 'jsx':
-      case 'tsx':
-      case 'html':
-      case 'css':
-      case 'py':
-      case 'java':
-      case 'cpp':
-      case 'c':
-        return <FileTextOutlined className="file-icon text" />;
-      case 'txt':
-      case 'md':
-      case 'json':
-      case 'xml':
-        return <FileTextOutlined className="file-icon text" />;
-      default:
-        return <FileUnknownOutlined className="file-icon text" />;
+    if (contentType.includes('image')) {
+      return <FileImageOutlined style={{ color: token.colorInfo }} />;
+    } else if (contentType.includes('pdf')) {
+      return <FilePdfOutlined style={{ color: token.colorError }} />;
+    } else if (contentType.includes('text')) {
+      return <FileTextOutlined style={{ color: token.colorWarning }} />;
+    } else if (extension === 'zip' || extension === 'rar' || extension === '7z') {
+      return <FileZipOutlined style={{ color: token.colorPrimary }} />;
+    } else if (extension === 'doc' || extension === 'docx') {
+      return <FileWordOutlined style={{ color: token.colorInfo }} />;
+    } else if (extension === 'xls' || extension === 'xlsx') {
+      return <FileExcelOutlined style={{ color: token.colorSuccess }} />;
+    } else if (extension === 'ppt' || extension === 'pptx') {
+      return <FilePptOutlined style={{ color: token.colorWarning }} />;
+    } else {
+      return <FileUnknownOutlined style={{ color: token.colorTextSecondary }} />;
     }
   };
 
-  // Enhanced upload handler
-  const handleUpload = async (values: any) => {
+  // Handle file upload
+  const handleUpload = async () => {
     if (selectedFiles.length === 0) {
-      message.error('Please select files');
+      message.warning('Please select files to upload');
       return;
     }
 
@@ -254,57 +231,49 @@ const FileManager: React.FC = () => {
     setUploadProgress(0);
 
     try {
-      const totalFiles = selectedFiles.length;
-      let completedFiles = 0;
-      const results: any[] = [];
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        setCurrentUploadFile(file.name);
 
-      for (const file of selectedFiles) {
-        try {
-          // Update progress for current file
-          const fileProgress = (completedFiles / totalFiles) * 100;
-          setUploadProgress(Math.round(fileProgress));
-          setCurrentUploadFile(file.name);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('location', currentLocation);
 
-          // Upload single file
-          const result = await itemsAPI.uploadFile(values.location, file);
-          results.push(result);
-          completedFiles++;
+        await itemsAPI.uploadItem(formData, (progress) => {
+          setUploadProgress(progress);
+        });
 
-          // Show progress for each file
-          message.success(`Uploaded: ${getOriginalFilename(file.name)}`);
-
-        } catch (error: any) {
-          console.error(`Upload error for ${file.name}:`, error);
-          message.error(`Failed to upload ${getOriginalFilename(file.name)}: ${error.message || 'Unknown error'}`);
-          // Continue with next file even if one fails
-        }
+        setUploadProgress(((i + 1) / selectedFiles.length) * 100);
       }
 
-      setUploadProgress(100);
-
-      setTimeout(() => {
-        const successCount = results.length;
-        const failedCount = totalFiles - successCount;
-
-        if (failedCount === 0) {
-          message.success(`All ${totalFiles} files uploaded successfully!`);
-        } else {
-          message.warning(`${successCount} files uploaded, ${failedCount} failed`);
+      message.success({
+        content: `Successfully uploaded ${selectedFiles.length} file(s)`,
+        icon: <CloudUploadOutlined />,
+        style: {
+          background: token.colorBgElevated,
+          border: `1px solid ${token.colorSuccess}`,
+          color: token.colorSuccess,
+          fontFamily: token.fontFamily
         }
+      });
 
-        setUploadModalVisible(false);
-        setUploadProgress(0);
-        setSelectedFiles([]);
-        setCurrentUploadFile('');
-        uploadForm.resetFields();
-        loadItems();
-      }, 500);
-
-    } catch (error: any) {
+      setUploadModalVisible(false);
+      setSelectedFiles([]);
       setUploadProgress(0);
       setCurrentUploadFile('');
-      console.error('Upload error:', error);
-      message.error('Upload failed: Please try again');
+      uploadForm.resetFields();
+      loadItems();
+    } catch (error: any) {
+      message.error({
+        content: `Upload failed: ${error.message || 'Unknown error'}`,
+        icon: <CloudUploadOutlined />,
+        style: {
+          background: token.colorBgElevated,
+          border: `1px solid ${token.colorError}`,
+          color: token.colorError,
+          fontFamily: token.fontFamily
+        }
+      });
     } finally {
       setUploadLoading(false);
     }
@@ -313,68 +282,58 @@ const FileManager: React.FC = () => {
   // Handle file download
   const handleDownload = async (item: Item) => {
     try {
-      const blob = await itemsAPI.downloadFile(item.id);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = getOriginalFilename(item.filename);
-      document.body.appendChild(a);
-      a.click();
+      const response = await itemsAPI.downloadItem(item.id);
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', getOriginalFilename(item.filename));
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      message.success('Download started');
     } catch (error: any) {
-      message.error('Download failed');
+      message.error(`Download failed: ${error.message || 'Unknown error'}`);
     }
   };
 
   // Handle file preview
   const handlePreview = async (item: Item) => {
     try {
-      const blob = await itemsAPI.downloadFile(item.id);
+      const response = await itemsAPI.downloadItem(item.id);
+      const contentType = item.contentType.toLowerCase();
 
-      if (item.contentType.startsWith('image/')) {
-        const url = window.URL.createObjectURL(blob);
+      if (contentType.includes('image')) {
+        const url = window.URL.createObjectURL(new Blob([response]));
         setPreviewImage(url);
         setPreviewTitle(getOriginalFilename(item.filename));
         setPreviewVisible(true);
-      } else if (item.contentType === 'application/pdf' || item.filename.toLowerCase().endsWith('.pdf')) {
-        // Handle PDF preview
-        const url = window.URL.createObjectURL(blob);
+      } else if (contentType.includes('pdf')) {
+        const url = window.URL.createObjectURL(new Blob([response]));
         setPdfPreviewUrl(url);
         setPdfPreviewTitle(getOriginalFilename(item.filename));
         setPdfPreviewVisible(true);
-      } else if (item.contentType.startsWith('text/') ||
-                 item.contentType === 'application/json' ||
-                 item.contentType === 'application/xml' ||
-                 item.filename.endsWith('.txt') ||
-                 item.filename.endsWith('.json') ||
-                 item.filename.endsWith('.xml') ||
-                 item.filename.endsWith('.md')) {
-        const text = await blob.text();
+      } else if (contentType.includes('text')) {
+        const text = await new Blob([response]).text();
         setTextPreviewContent(text);
         setTextPreviewTitle(getOriginalFilename(item.filename));
         setTextPreviewVisible(true);
       } else {
-        console.log("unsupported file type", item.contentType);
-        message.warning(`Cannot preview ${getOriginalFilename(item.filename)}. This file type (${item.contentType}) cannot be previewed.`);
         setUnsupportedFileItem(item);
         setUnsupportedFileModalVisible(true);
       }
     } catch (error: any) {
-      console.error('Preview error:', error);
-      message.error(`Failed to preview ${item.filename}: ${error.message || 'Unknown error'}`);
+      message.error(`Preview failed: ${error.message || 'Unknown error'}`);
     }
   };
 
-  // Handle file deletion
+  // Handle file delete
   const handleDelete = async (item: Item) => {
     try {
       await itemsAPI.deleteItem(item.id);
-      message.success('File deleted successfully!');
+      message.success(`Deleted: ${getOriginalFilename(item.filename)}`);
       loadItems();
     } catch (error: any) {
-      message.error('Delete failed');
+      message.error(`Failed to delete ${getOriginalFilename(item.filename)}: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -387,31 +346,15 @@ const FileManager: React.FC = () => {
 
     setBulkDeleteLoading(true);
     try {
-      const totalFiles = selectedRowKeys.length;
-      let completedFiles = 0;
-      const results: any[] = [];
+      const results = await Promise.allSettled(
+        selectedRowKeys.map(key => itemsAPI.deleteItem(key as string))
+      );
 
-      for (const key of selectedRowKeys) {
-        try {
-          await itemsAPI.deleteItem(Number(key));
-          results.push(key);
-          completedFiles++;
-
-          // Show progress for each file
-          const fileName = filteredItems.find(item => item.id === key)?.filename || 'Unknown file';
-          message.success(`Deleted: ${getOriginalFilename(fileName)}`);
-        } catch (error: any) {
-          console.error(`Delete error for file ${key}:`, error);
-          const fileName = filteredItems.find(item => item.id === key)?.filename || 'Unknown file';
-          message.error(`Failed to delete ${getOriginalFilename(fileName)}: ${error.message || 'Unknown error'}`);
-        }
-      }
-
-      const successCount = results.length;
-      const failedCount = totalFiles - successCount;
+      const successCount = results.filter(result => result.status === 'fulfilled').length;
+      const failedCount = selectedRowKeys.length - successCount;
 
       if (failedCount === 0) {
-        message.success(`All ${totalFiles} files deleted successfully!`);
+        message.success(`All ${selectedRowKeys.length} files deleted successfully!`);
       } else {
         message.warning(`${successCount} files deleted, ${failedCount} failed`);
       }
@@ -419,7 +362,6 @@ const FileManager: React.FC = () => {
       setSelectedRowKeys([]);
       loadItems();
     } catch (error: any) {
-      console.error('Bulk delete error:', error);
       message.error('Bulk delete failed: Please try again');
     } finally {
       setBulkDeleteLoading(false);
@@ -435,7 +377,13 @@ const FileManager: React.FC = () => {
       render: (item: Item) => (
         <Space size="small">
           {getFileIcon(item)}
-          <span className="terminal-text" style={{ fontSize: '11px' }}>{getOriginalFilename(item.filename)}</span>
+          <Text style={{
+            fontSize: token.fontSizeSM,
+            fontFamily: token.fontFamily,
+            color: token.colorText
+          }}>
+            {getOriginalFilename(item.filename)}
+          </Text>
         </Space>
       ),
     },
@@ -445,9 +393,13 @@ const FileManager: React.FC = () => {
       key: 'location',
       width: '25%',
       render: (location: string) => (
-        <span className="terminal-text" style={{ fontSize: '11px' }}>
+        <Text style={{
+          fontSize: token.fontSizeSM,
+          fontFamily: token.fontFamily,
+          color: token.colorTextSecondary
+        }}>
           {location || 'Root'}
-        </span>
+        </Text>
       ),
     },
     {
@@ -458,7 +410,12 @@ const FileManager: React.FC = () => {
       render: (contentType: string) => (
         <Badge
           count={contentType.split('/')[1]?.toUpperCase() || 'UNKNOWN'}
-          style={{ backgroundColor: '#00ff00', color: '#000', fontSize: '10px' }}
+          style={{
+            backgroundColor: token.colorPrimary,
+            color: token.colorTextInverse,
+            fontSize: token.fontSizeSM,
+            fontFamily: token.fontFamily
+          }}
           size="small"
         />
       ),
@@ -469,9 +426,13 @@ const FileManager: React.FC = () => {
       key: 'createdAt',
       width: '15%',
       render: (date: string) => (
-        <span className="terminal-text" style={{ fontSize: '11px' }}>
+        <Text style={{
+          fontSize: token.fontSizeSM,
+          fontFamily: token.fontFamily,
+          color: token.colorTextTertiary
+        }}>
           {new Date(date).toLocaleDateString()}
-        </span>
+        </Text>
       ),
     },
     {
@@ -485,9 +446,12 @@ const FileManager: React.FC = () => {
               type="text"
               icon={<EyeOutlined />}
               onClick={() => handlePreview(item)}
-              className="retro-button"
               size="small"
-              style={{ padding: '2px 4px', minWidth: 'auto' }}
+              style={{
+                color: token.colorPrimary,
+                padding: '2px 4px',
+                minWidth: 'auto'
+              }}
             />
           </Tooltip>
           <Tooltip title="Download">
@@ -495,9 +459,12 @@ const FileManager: React.FC = () => {
               type="text"
               icon={<DownloadOutlined />}
               onClick={() => handleDownload(item)}
-              className="retro-button"
               size="small"
-              style={{ padding: '2px 4px', minWidth: 'auto' }}
+              style={{
+                color: token.colorInfo,
+                padding: '2px 4px',
+                minWidth: 'auto'
+              }}
             />
           </Tooltip>
           <Popconfirm
@@ -513,9 +480,11 @@ const FileManager: React.FC = () => {
                 type="text"
                 danger
                 icon={<DeleteOutlined />}
-                className="retro-button"
                 size="small"
-                style={{ padding: '2px 4px', minWidth: 'auto' }}
+                style={{
+                  padding: '2px 4px',
+                  minWidth: 'auto'
+                }}
               />
             </Tooltip>
           </Popconfirm>
@@ -538,306 +507,265 @@ const FileManager: React.FC = () => {
   }, [pdfPreviewUrl]);
 
   return (
-    <div className="terminal-container dashboard-container">
-      {/* Compact ASCII Header */}
-      <div className="ascii-header compact">
-        {`╔══════════════════════════════════════════════════════════════╗
-║                    CLOUD INTERFACE v2.0                      ║
-║                        TERMINAL ACCESS                       ║
-╚══════════════════════════════════════════════════════════════╝`}
-      </div>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Toolbar */}
+      <div style={{
+        marginBottom: token.marginMD,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: token.marginSM
+      }}>
+        <Space size="middle">
+          <Search
+            placeholder="Search files..."
+            onSearch={handleSearch}
+            onChange={(e) => handleSearch(e.target.value)}
+            style={{
+              width: 300,
+              fontFamily: token.fontFamily
+            }}
+            allowClear
+          />
 
-      {/* Compact Status Bar */}
-      <div className="status-message success compact">
-        <Text className="terminal-text">
-          USER: {user?.username} | ROLES: {user?.roles?.join(', ') || 'USER'} | LOCATION: {currentLocation || 'Root'} | FILES: {filteredItems.length}
-          <span className="cursor" />
-        </Text>
-      </div>
+          <Button
+            type="primary"
+            icon={<CloudUploadOutlined />}
+            onClick={() => setUploadModalVisible(true)}
+            style={{
+              fontFamily: token.fontFamily,
+              fontWeight: 'bold'
+            }}
+          >
+            UPLOAD FILES
+          </Button>
 
-      <div className="dashboard-content">
-        <Row gutter={[12, 12]} style={{ height: '100%', margin: 0 }}>
-          {/* Compact Folder Tree Panel */}
-          <Col xs={24} md={5} style={{ height: '100%', padding: 0 }}>
-            <Card
-              title="FOLDERS"
-              className="retro-card compact"
-              style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-              extra={
-                <Button
-                  icon={<ReloadOutlined />}
-                  onClick={loadItems}
-                  className="retro-button"
-                  size="small"
-                />
-              }
-              bodyStyle={{ flex: 1, padding: '8px', display: 'flex', flexDirection: 'column' }}
+          {selectedRowKeys.length > 0 && (
+            <Popconfirm
+              title={`Delete ${selectedRowKeys.length} selected files?`}
+              description="This action cannot be undone."
+              onConfirm={handleBulkDelete}
+              okText="DELETE ALL"
+              cancelText="CANCEL"
+              okType="danger"
             >
-              <div className="file-tree compact" style={{ flex: 1, overflowY: 'auto' }}>
-                <Tree
-                  treeData={folderTree}
-                  onSelect={handleFolderSelect}
-                  expandedKeys={expandedKeys}
-                  onExpand={(keys) => setExpandedKeys(keys)}
-                  showIcon
-                  className="terminal-text"
-                  style={{ fontSize: '12px' }}
-                />
-              </div>
-            </Card>
-          </Col>
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                loading={bulkDeleteLoading}
+                style={{
+                  fontFamily: token.fontFamily,
+                  fontWeight: 'bold'
+                }}
+              >
+                DELETE SELECTED ({selectedRowKeys.length})
+              </Button>
+            </Popconfirm>
+          )}
+        </Space>
 
-          {/* Main Content - Optimized */}
-          <Col xs={24} md={19} style={{ height: '100%', padding: 0 }}>
-            {/* Compact Search and Upload Bar */}
-            <Card className="retro-card compact" style={{ marginBottom: '8px' }} bodyStyle={{ padding: '8px' }}>
-              <Row gutter={[8, 8]} align="middle">
-                <Col flex="auto">
-                  <Search
-                    placeholder="Search files..."
-                    onSearch={handleSearch}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="retro-input"
-                    prefix={<SearchOutlined />}
-                    size="middle"
-                  />
-                </Col>
-                {selectedRowKeys.length > 0 && (
-                  <Col>
-                    <Popconfirm
-                      title={`Delete ${selectedRowKeys.length} selected file${selectedRowKeys.length !== 1 ? 's' : ''}?`}
-                      description="This action cannot be undone."
-                      onConfirm={handleBulkDelete}
-                      okText="DELETE"
-                      cancelText="CANCEL"
-                      okType="danger"
-                    >
-                      <Button
-                        danger
-                        icon={<DeleteOutlined />}
-                        loading={bulkDeleteLoading}
-                        className="retro-button"
-                        size="middle"
-                      >
-                        DELETE ({selectedRowKeys.length})
-                      </Button>
-                    </Popconfirm>
-                  </Col>
-                )}
-                <Col>
-                  <Button
-                    type="primary"
-                    icon={<CloudUploadOutlined />}
-                    onClick={() => setUploadModalVisible(true)}
-                    className="retro-button"
-                    size="middle"
-                  >
-                    UPLOAD
-                  </Button>
-                </Col>
-                <Col>
-                  <Button
-                    icon={<ReloadOutlined />}
-                    onClick={loadItems}
-                    className="retro-button"
-                    size="middle"
-                  >
-                    REFRESH
-                  </Button>
-                </Col>
-                <Col>
-                  <Button
-                    onClick={logout}
-                    className="retro-button"
-                    size="middle"
-                  >
-                    LOGOUT
-                  </Button>
-                </Col>
-              </Row>
-            </Card>
+        <Space size="small">
+          <Text style={{
+            color: token.colorTextSecondary,
+            fontFamily: token.fontFamily,
+            fontSize: token.fontSizeSM
+          }}>
+            {filteredItems.length} files
+          </Text>
 
-            {/* Files Table - Full Height */}
-            <Card className="retro-card compact" style={{ height: 'calc(100% - 60px)', display: 'flex', flexDirection: 'column' }} bodyStyle={{ flex: 1, padding: '8px', display: 'flex', flexDirection: 'column' }}>
-              <Table
-                columns={columns}
-                dataSource={filteredItems}
-                rowKey="id"
-                loading={loading}
-                className="retro-table compact"
-                rowSelection={{
-                  selectedRowKeys,
-                  onChange: (newSelectedRowKeys) => {
-                    setSelectedRowKeys(newSelectedRowKeys);
-                  },
-                  getCheckboxProps: (record) => ({
-                    name: record.filename,
-                  }),
-                }}
-                pagination={{
-                  pageSize: 15,
-                  showTotal: (total, range) =>
-                    `${range[0]}-${range[1]} of ${total} files`,
-                  size: 'small',
-                  showSizeChanger: false,
-                }}
-                locale={{
-                  emptyText: (
-                    <div className="terminal-text" style={{ textAlign: 'center', padding: '20px' }}>
-                      NO FILES FOUND
-                      <br />
-                      UPLOAD YOUR FIRST FILE TO GET STARTED
-                    </div>
-                  )
-                }}
-                style={{ flex: 1 }}
-                scroll={{ y: 'calc(100vh - 280px)' }}
-                size="small"
-              />
-            </Card>
-          </Col>
-        </Row>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={loadItems}
+            loading={loading}
+            style={{
+              fontFamily: token.fontFamily
+            }}
+          />
+        </Space>
       </div>
 
-      {/* Enhanced Upload Modal */}
+      {/* Main Content */}
+      <Row gutter={[token.marginMD, token.marginMD]} style={{ flex: 1, margin: 0 }}>
+        {/* Folder Tree */}
+        <Col xs={24} lg={6} style={{ height: '100%' }}>
+          <Card
+            title={
+              <Space>
+                <FolderOutlined style={{ color: token.colorPrimary }} />
+                <Text style={{
+                  color: token.colorPrimary,
+                  fontFamily: token.fontFamily,
+                  fontWeight: 'bold'
+                }}>
+                  FOLDERS
+                </Text>
+              </Space>
+            }
+            style={{
+              height: '100%',
+              background: token.colorBgContainer,
+              border: `1px solid ${token.colorBorder}`
+            }}
+            bodyStyle={{
+              padding: token.paddingSM,
+              height: 'calc(100% - 57px)',
+              overflowY: 'auto'
+            }}
+          >
+            <Tree
+              treeData={folderTree}
+              onSelect={handleFolderSelect}
+              expandedKeys={expandedKeys}
+              onExpand={(keys) => setExpandedKeys(keys)}
+              showIcon
+              style={{
+                fontFamily: token.fontFamily,
+                fontSize: token.fontSizeSM
+              }}
+            />
+          </Card>
+        </Col>
+
+        {/* File Table */}
+        <Col xs={24} lg={18} style={{ height: '100%' }}>
+          <Card
+            style={{
+              height: '100%',
+              background: token.colorBgContainer,
+              border: `1px solid ${token.colorBorder}`
+            }}
+            bodyStyle={{
+              padding: token.paddingSM,
+              height: 'calc(100% - 57px)',
+              overflowY: 'auto'
+            }}
+          >
+            <Table
+              columns={columns}
+              dataSource={filteredItems}
+              rowKey="id"
+              loading={loading}
+              pagination={{
+                pageSize: 20,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} of ${total} files`,
+                style: {
+                  fontFamily: token.fontFamily,
+                  fontSize: token.fontSizeSM
+                }
+              }}
+              rowSelection={{
+                selectedRowKeys,
+                onChange: setSelectedRowKeys,
+              }}
+              scroll={{ y: 'calc(100vh - 400px)' }}
+              style={{
+                fontFamily: token.fontFamily
+              }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Upload Modal */}
       <Modal
-        title="UPLOAD FILES"
+        title={
+          <Space>
+            <CloudUploadOutlined style={{ color: token.colorPrimary }} />
+            <Text style={{
+              color: token.colorPrimary,
+              fontFamily: token.fontFamily,
+              fontWeight: 'bold'
+            }}>
+              UPLOAD FILES
+            </Text>
+          </Space>
+        }
         open={uploadModalVisible}
-        onCancel={() => {
-          setUploadModalVisible(false);
-          setSelectedFiles([]);
-          setUploadProgress(0);
-          setCurrentUploadFile('');
-          uploadForm.resetFields();
-        }}
+        onCancel={() => setUploadModalVisible(false)}
         footer={null}
         width={600}
-        className="retro-modal"
+        style={{
+          fontFamily: token.fontFamily
+        }}
       >
         <Form
           form={uploadForm}
-          layout="vertical"
           onFinish={handleUpload}
-          initialValues={{ location: currentLocation }}
+          layout="vertical"
         >
           <Form.Item
-            name="location"
-            label="LOCATION"
-            rules={[{ required: true, message: 'Please enter a location!' }]}
+            name="files"
+            label="Select Files"
+            rules={[{ required: true, message: 'Please select files to upload' }]}
           >
-            <Input
-              placeholder="e.g., documents/work, photos/vacation"
-              className="retro-input"
-              prefix={<FolderOutlined />}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="SELECT FILES"
-            required
-          >
-            <Upload
-              beforeUpload={(file) => {
-                setSelectedFiles(prev => [...prev, file]);
-                return false;
-              }}
-              showUploadList={false}
-              accept="*/*"
+            <Upload.Dragger
               multiple
+              beforeUpload={() => false}
+              onChange={(info) => setSelectedFiles(info.fileList.map(f => f.originFileObj!))}
+              accept="*/*"
+              style={{
+                background: token.colorBgContainer,
+                border: `2px dashed ${token.colorBorder}`,
+                fontFamily: token.fontFamily
+              }}
             >
-              <Button
-                icon={<UploadOutlined />}
-                className="retro-button"
-                block
-              >
-                CHOOSE FILES
-              </Button>
-            </Upload>
-            {selectedFiles.length > 0 && (
-              <div className="status-message success" style={{ marginTop: '10px' }}>
-                <div className="terminal-text">
-                  <div style={{ marginBottom: '8px' }}>
-                    SELECTED FILES ({selectedFiles.length}):
-                  </div>
-                  {selectedFiles.map((file, index) => (
-                    <div key={index} style={{
-                      fontSize: '12px',
-                      marginBottom: '4px',
-                      padding: '4px 8px',
-                      backgroundColor: '#001100',
-                      border: '1px solid #00ff00',
-                      borderRadius: '4px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <span>{getOriginalFilename(file.name)} ({Math.round(file.size / 1024)} KB)</span>
-                      <Tooltip title="Remove this file">
-                        <Button
-                          type="text"
-                          size="small"
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== index))}
-                          className="retro-button"
-                          style={{ padding: '0 4px', minWidth: 'auto' }}
-                        />
-                      </Tooltip>
-                    </div>
-                  ))}
-                  <div style={{
-                    fontSize: '12px',
-                    marginTop: '8px',
-                    padding: '4px 8px',
-                    backgroundColor: '#002200',
-                    border: '1px solid #00aa00',
-                    borderRadius: '4px',
-                    textAlign: 'center'
-                  }}>
-                    TOTAL SIZE: {Math.round(selectedFiles.reduce((sum, file) => sum + file.size, 0) / 1024)} KB
-                  </div>
-                </div>
-                <Button
-                  type="text"
-                  size="small"
-                  onClick={() => setSelectedFiles([])}
-                  className="retro-button"
-                  style={{ marginTop: '8px' }}
-                >
-                  CLEAR ALL
-                </Button>
-              </div>
-            )}
+              <p className="ant-upload-drag-icon">
+                <CloudUploadOutlined style={{ fontSize: 48, color: token.colorPrimary }} />
+              </p>
+              <p style={{ color: token.colorText, fontFamily: token.fontFamily }}>
+                Click or drag files to upload
+              </p>
+            </Upload.Dragger>
           </Form.Item>
 
           {uploadProgress > 0 && (
-            <Form.Item label="UPLOAD PROGRESS">
-              {currentUploadFile && (
-                <div className="terminal-text" style={{ marginBottom: '8px', fontSize: '12px' }}>
-                  UPLOADING: {currentUploadFile}
-                </div>
-              )}
+            <Form.Item label="Upload Progress">
               <Progress
                 percent={uploadProgress}
-                status={uploadProgress === 100 ? 'success' : 'active'}
-                className="retro-progress"
-                format={(percent) => `${percent}% (${Math.round((uploadProgress / 100) * selectedFiles.length)}/${selectedFiles.length} files)`}
+                status={uploadLoading ? 'active' : 'success'}
+                style={{ fontFamily: token.fontFamily }}
               />
+              {currentUploadFile && (
+                <Text style={{
+                  color: token.colorTextSecondary,
+                  fontFamily: token.fontFamily,
+                  fontSize: token.fontSizeSM,
+                  display: 'block',
+                  marginTop: token.marginXS
+                }}>
+                  Uploading: {currentUploadFile}
+                </Text>
+              )}
             </Form.Item>
           )}
 
           <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={uploadLoading}
-              className="retro-button"
-              block
-              size="large"
-              disabled={selectedFiles.length === 0}
-            >
-              {uploadLoading ? 'UPLOADING...' : `UPLOAD ${selectedFiles.length} FILE${selectedFiles.length !== 1 ? 'S' : ''}`}
-            </Button>
+            <Space>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={uploadLoading}
+                icon={<CloudUploadOutlined />}
+                style={{
+                  fontFamily: token.fontFamily,
+                  fontWeight: 'bold'
+                }}
+              >
+                {uploadLoading ? 'UPLOADING...' : 'UPLOAD FILES'}
+              </Button>
+              <Button
+                onClick={() => setUploadModalVisible(false)}
+                style={{
+                  fontFamily: token.fontFamily
+                }}
+              >
+                CANCEL
+              </Button>
+            </Space>
           </Form.Item>
         </Form>
       </Modal>
@@ -847,18 +775,16 @@ const FileManager: React.FC = () => {
         open={previewVisible}
         title={previewTitle}
         footer={null}
-        onCancel={() => {
-          setPreviewVisible(false);
-          setPreviewImage('');
-        }}
-        className="retro-modal"
+        onCancel={() => setPreviewVisible(false)}
         width={800}
+        style={{
+          fontFamily: token.fontFamily
+        }}
       >
         <Image
           alt={previewTitle}
           style={{ width: '100%' }}
           src={previewImage}
-          preview={false}
         />
       </Modal>
 
@@ -867,29 +793,25 @@ const FileManager: React.FC = () => {
         open={textPreviewVisible}
         title={textPreviewTitle}
         footer={null}
-        onCancel={() => {
-          setTextPreviewVisible(false);
-          setTextPreviewContent('');
-        }}
-        className="retro-modal"
+        onCancel={() => setTextPreviewVisible(false)}
         width={800}
+        style={{
+          fontFamily: token.fontFamily
+        }}
       >
-        <div style={{ maxHeight: '400px', overflow: 'auto' }}>
-          <pre style={{
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            fontSize: '14px',
-            lineHeight: '1.4',
-            backgroundColor: '#000',
-            color: '#00ff00',
-            padding: '12px',
-            border: '1px solid #00ff00',
-            fontFamily: 'VT323, monospace',
-            textShadow: '0 0 5px #00ff00'
-          }}>
-            {textPreviewContent}
-          </pre>
-        </div>
+        <pre style={{
+          background: token.colorBgContainer,
+          padding: token.paddingMD,
+          border: `1px solid ${token.colorBorder}`,
+          borderRadius: token.borderRadius,
+          fontFamily: token.fontFamily,
+          fontSize: token.fontSizeSM,
+          color: token.colorText,
+          maxHeight: '400px',
+          overflow: 'auto'
+        }}>
+          {textPreviewContent}
+        </pre>
       </Modal>
 
       {/* PDF Preview Modal */}
@@ -897,113 +819,53 @@ const FileManager: React.FC = () => {
         open={pdfPreviewVisible}
         title={pdfPreviewTitle}
         footer={null}
-        onCancel={() => {
-          setPdfPreviewVisible(false);
-          if (pdfPreviewUrl) {
-            window.URL.revokeObjectURL(pdfPreviewUrl);
-          }
-          setPdfPreviewUrl('');
+        onCancel={() => setPdfPreviewVisible(false)}
+        width="90%"
+        style={{
+          fontFamily: token.fontFamily
         }}
-        className="retro-modal"
-        width={900}
-        style={{ top: 20 }}
       >
-        <div style={{
-          height: '70vh',
-          border: '1px solid #00ff00',
-          backgroundColor: '#000'
-        }}>
-          <iframe
-            src={`${pdfPreviewUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-            style={{
-              width: '100%',
-              height: '100%',
-              border: 'none',
-              backgroundColor: '#fff'
-            }}
-            title={pdfPreviewTitle}
-          />
-        </div>
-        <div style={{
-          marginTop: '15px',
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '10px'
-        }}>
-          <Button
-            onClick={() => {
-              setPdfPreviewVisible(false);
-              if (pdfPreviewUrl) {
-                window.URL.revokeObjectURL(pdfPreviewUrl);
-              }
-              setPdfPreviewUrl('');
-            }}
-            className="retro-button"
-          >
-            Close
-          </Button>
-          <Button
-            type="primary"
-            onClick={() => {
-              if (pdfPreviewUrl) {
-                window.open(pdfPreviewUrl, '_blank');
-              }
-            }}
-            className="retro-button"
-            icon={<DownloadOutlined />}
-          >
-            Open in New Tab
-          </Button>
-        </div>
+        <iframe
+          src={pdfPreviewUrl}
+          style={{ width: '100%', height: '70vh', border: 'none' }}
+          title={pdfPreviewTitle}
+        />
       </Modal>
 
       {/* Unsupported File Modal */}
       <Modal
         open={unsupportedFileModalVisible}
-        title={unsupportedFileItem ? getOriginalFilename(unsupportedFileItem.filename) : "Unsupported File"}
-        footer={null}
-        onCancel={() => {
-          setUnsupportedFileModalVisible(false);
-          setUnsupportedFileItem(null);
-        }}
-        className="retro-modal"
-        width={500}
-      >
-        <div className="terminal-text" style={{ marginBottom: '20px' }}>
-          <p>This file type ({unsupportedFileItem?.contentType}) cannot be previewed.</p>
-          <p>Please download the file to view its contents.</p>
-        </div>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '10px',
-          borderTop: '1px solid #00ff00',
-          paddingTop: '15px'
-        }}>
+        title="Unsupported File Type"
+        onCancel={() => setUnsupportedFileModalVisible(false)}
+        footer={[
           <Button
-            onClick={() => {
-              setUnsupportedFileModalVisible(false);
-              setUnsupportedFileItem(null);
-            }}
-            className="retro-button"
-          >
-            Cancel
-          </Button>
-          <Button
+            key="download"
             type="primary"
+            icon={<DownloadOutlined />}
             onClick={() => {
               if (unsupportedFileItem) {
                 handleDownload(unsupportedFileItem);
+                setUnsupportedFileModalVisible(false);
               }
-              setUnsupportedFileModalVisible(false);
-              setUnsupportedFileItem(null);
             }}
-            className="retro-button"
-            icon={<DownloadOutlined />}
+            style={{
+              fontFamily: token.fontFamily,
+              fontWeight: 'bold'
+            }}
           >
-            Download
+            DOWNLOAD INSTEAD
           </Button>
-        </div>
+        ]}
+        style={{
+          fontFamily: token.fontFamily
+        }}
+      >
+        <Text style={{
+          color: token.colorText,
+          fontFamily: token.fontFamily
+        }}>
+          This file type cannot be previewed. You can download it instead.
+        </Text>
       </Modal>
     </div>
   );
