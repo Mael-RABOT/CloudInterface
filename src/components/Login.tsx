@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Card, Tabs, message, Typography, Divider } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, LoginOutlined } from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -30,10 +30,6 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Get the intended destination from location state, or default to dashboard
-  const from = (location.state as any)?.from?.pathname || '/dashboard';
 
   const onLogin = async (values: { username: string; password: string }) => {
     setLoading(true);
@@ -41,10 +37,9 @@ const Login: React.FC = () => {
       const response = await authAPI.login(values.username, values.password);
       login(response.token, response.user);
       message.success('ACCESS GRANTED - Welcome to the system!');
-      // Navigate to the intended destination or dashboard
-      navigate(from, { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (error: any) {
-      message.error(error.response?.data?.error || 'ACCESS DENIED - Invalid credentials');
+      message.error(error.response?.data?.message || 'ACCESS DENIED - Invalid credentials');
     } finally {
       setLoading(false);
     }

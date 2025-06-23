@@ -117,7 +117,8 @@ api.interceptors.response.use(
     console.error("Error status:", error.response?.status);
     console.error("Error data:", error.response?.data);
 
-    if (error.response?.status === 401) {
+    // Only redirect to login for 401 errors on authenticated requests, not login attempts
+    if (error.response?.status === 401 && error.config?.url !== '/auth/login') {
       removeToken();
       window.location.href = '/login';
     }
@@ -139,19 +140,28 @@ export const authAPI = {
 
   // Login user
   login: async (username: string, password: string): Promise<LoginResponse> => {
-    try {
-      const response = await api.post('/auth/login', {
-        username,
-        password,
-      });
-      return response.data;
-    } catch (error: any) {
-      console.error("Login error:", error);
-      console.error("Error message:", error.message);
-      console.error("Error response:", error.response);
-      console.error("Error config:", error.config);
-      throw error;
+    const response = await api.post('/auth/login', {
+      username,
+      password,
+    });
+
+    // Decode the JWT token to extract user information
+    const decoded = jose.decodeJwt(response.data.token);
+    if (decoded && typeof decoded === 'object') {
+      const user: User = {
+        id: decoded.sub ? parseInt(decoded.sub as string) : 0,
+        username: decoded.username as string || username,
+        email: decoded.email as string || '',
+        roles: decoded.roles as string[] || [],
+      };
+
+      return {
+        token: response.data.token,
+        user: user
+      };
     }
+
+    throw new Error('Failed to decode JWT token');
   },
 };
 
