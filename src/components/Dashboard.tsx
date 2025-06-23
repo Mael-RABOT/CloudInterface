@@ -35,16 +35,6 @@ const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 const { Dragger } = Upload;
 
-// ASCII Art Header
-const ASCII_HEADER = `
-   ╔═══════════════════════════════════════════════════╗             ██████╗██╗      ██████╗ ██╗   ██╗██████╗              ╔══════════════════════╗
-   ║          INTERFACE v2.0 - TERMINAL ACCESS         ║            ██╔════╝██║     ██╔═══██╗██║   ██║██╔══██╗             ║     SYSTEM INFO      ║
-   ║              SECURE FILE MANAGEMENT               ║  ╔══════╗  ██║     ██║     ██║   ██║██║   ██║██║  ██║  ╔══════╗   ║                      ║
-   ║                                                   ║  ╚══════╝  ██║     ██║     ██║   ██║██║   ██║██║  ██║  ╚══════╝   ║    STATUS: ONLINE    ║
-   ║              [SYSTEM ONLINE] [SECURE]             ║            ╚██████╗███████╗╚██████╔╝╚██████╔╝██████╔╝             ║   SECURITY: ACTIVE   ║
-   ╚═══════════════════════════════════════════════════╝             ╚═════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝              ╚══════════════════════╝
-`;
-
 // Mobile File Item Component
 interface MobileFileItemProps {
   file: Item;
@@ -538,6 +528,16 @@ const Dashboard: React.FC = () => {
   const [unsupportedFileModalVisible, setUnsupportedFileModalVisible] = useState(false);
   const [unsupportedFileItem, setUnsupportedFileItem] = useState<Item | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+
+// ASCII Art Header
+const ASCII_HEADER = isMobile ? '' : `
+   ╔═══════════════════════════════════════════════════╗             ██████╗██╗      ██████╗ ██╗   ██╗██████╗              ╔══════════════════════╗
+   ║          INTERFACE v2.0 - TERMINAL ACCESS         ║            ██╔════╝██║     ██╔═══██╗██║   ██║██╔══██╗             ║     SYSTEM INFO      ║
+   ║              SECURE FILE MANAGEMENT               ║  ╔══════╗  ██║     ██║     ██║   ██║██║   ██║██║  ██║  ╔══════╗   ║                      ║
+   ║                                                   ║  ╚══════╝  ██║     ██║     ██║   ██║██║   ██║██║  ██║  ╚══════╝   ║    STATUS: ONLINE    ║
+   ║              [SYSTEM ONLINE] [SECURE]             ║            ╚██████╗███████╗╚██████╔╝╚██████╔╝██████╔╝             ║   SECURITY: ACTIVE   ║
+   ╚═══════════════════════════════════════════════════╝             ╚═════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝              ╚══════════════════════╝
+`;
 
   // Helper function to get original filename
   const getOriginalFilename = (filename: string) => {
@@ -1070,7 +1070,8 @@ const Dashboard: React.FC = () => {
             position: 'relative',
             overflow: 'hidden'
           }}>
-            {/* Content Header */}
+            {/* Files Section - Hidden on Mobile */}
+            {!isMobile && (
             <div style={{
               padding: isMobile ? `${token.paddingMD}px ${token.paddingLG}px` : `${token.paddingLG}px ${token.paddingXL}px`,
               borderBottom: `1px solid ${token.colorBorder}`,
@@ -1194,6 +1195,7 @@ const Dashboard: React.FC = () => {
                 </Button>
               </div>
             </div>
+            )}
 
             {/* File Display */}
             <div style={{
