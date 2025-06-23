@@ -368,7 +368,11 @@ const Login: React.FC = () => {
                 maxWidth: '500px',
                 margin: '0 auto'
               }}
-              bodyStyle={{ padding: token.paddingXL }}
+              styles={{
+                body: {
+                  padding: token.paddingXL
+                }
+              }}
             >
               <Tabs
                 activeKey={activeTab}

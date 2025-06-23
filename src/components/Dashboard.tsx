@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Typography, theme, Button, Tree, message, Modal, Upload, Progress, Form, Input, Tooltip, Image, Checkbox } from 'antd';
+import { Layout, Typography, theme, Button, Tree, message, Modal, Upload, Progress, Form, Input, Tooltip, Checkbox } from 'antd';
 import {
   FileTextOutlined,
   DatabaseOutlined,
@@ -9,8 +9,6 @@ import {
   UploadOutlined,
   InboxOutlined,
   DeleteOutlined,
-  EyeOutlined,
-  DownloadOutlined,
   FilePdfOutlined,
   FileWordOutlined,
   FileExcelOutlined,
@@ -24,12 +22,12 @@ import {
   FileMarkdownOutlined,
   FileImageOutlined,
   FileUnknownOutlined,
-  LoadingOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { itemsAPI } from '../services/api';
 import type { Item } from '../services/api';
 import type { Key } from 'antd/es/table/interface';
+import FilePreview from './FilePreview';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -375,6 +373,7 @@ const Dashboard: React.FC = () => {
   const [textPreviewVisible, setTextPreviewVisible] = useState(false);
   const [textPreviewContent, setTextPreviewContent] = useState('');
   const [textPreviewTitle, setTextPreviewTitle] = useState('');
+  const [textPreviewFileId, setTextPreviewFileId] = useState<number | undefined>();
   const [unsupportedFileModalVisible, setUnsupportedFileModalVisible] = useState(false);
   const [unsupportedFileItem, setUnsupportedFileItem] = useState<Item | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -459,6 +458,7 @@ const Dashboard: React.FC = () => {
                file.filename.endsWith('.xml') ||
                file.filename.endsWith('.md')) {
       setTextPreviewTitle(getOriginalFilename(file.filename));
+      setTextPreviewFileId(file.id);
       setTextPreviewVisible(true);
     } else {
       console.log("unsupported file type", file.contentType);
@@ -500,8 +500,21 @@ const Dashboard: React.FC = () => {
       setPreviewTitle('');
       setPdfPreviewTitle('');
       setTextPreviewTitle('');
+      setTextPreviewFileId(undefined);
     } finally {
       setPreviewLoading(false);
+    }
+  };
+
+  const handleFileUpdate = async (fileId: number, content: string, filename: string) => {
+    try {
+      await itemsAPI.updateFile(fileId, content, filename);
+      message.success('File updated successfully!');
+      // Reload files to reflect changes
+      loadFiles();
+    } catch (error: any) {
+      console.error('File update error:', error);
+      message.error(`Failed to update file: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -986,8 +999,10 @@ const Dashboard: React.FC = () => {
         style={{
           fontFamily: token.fontFamily
         }}
-        bodyStyle={{
-          padding: token.paddingLG
+        styles={{
+          body: {
+            padding: token.paddingLG
+          }
         }}
       >
         <Form
@@ -1194,339 +1209,6 @@ const Dashboard: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* Image Preview Modal */}
-      <Modal
-        open={previewVisible}
-        title={
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: token.marginSM,
-            fontFamily: token.fontFamily,
-            color: token.colorPrimary,
-            fontWeight: 'bold'
-          }}>
-            <EyeOutlined />
-            {previewTitle}
-          </div>
-        }
-        footer={null}
-        onCancel={() => {
-          setPreviewVisible(false);
-          setPreviewImage('');
-          setPreviewTitle('');
-        }}
-        width={800}
-        style={{
-          fontFamily: token.fontFamily
-        }}
-      >
-        {previewLoading ? (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '400px',
-            background: token.colorBgContainer,
-            border: `1px solid ${token.colorBorder}`,
-            borderRadius: token.borderRadius
-          }}>
-            <div style={{
-              textAlign: 'center',
-              color: token.colorTextSecondary,
-              fontFamily: token.fontFamily
-            }}>
-              <div style={{
-                fontSize: '24px',
-                marginBottom: token.marginSM,
-                color: token.colorPrimary
-              }}>
-                <LoadingOutlined />
-              </div>
-              <Text>LOADING PREVIEW...</Text>
-            </div>
-          </div>
-        ) : (
-          <Image
-            alt={previewTitle}
-            style={{ width: '100%' }}
-            src={previewImage}
-            preview={false}
-            onLoad={() => {
-              // Clean up the blob URL when image loads
-              return () => {
-                if (previewImage) {
-                  window.URL.revokeObjectURL(previewImage);
-                }
-              };
-            }}
-          />
-        )}
-      </Modal>
-
-      {/* PDF Preview Modal */}
-      <Modal
-        open={pdfPreviewVisible}
-        title={
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: token.marginSM,
-            fontFamily: token.fontFamily,
-            color: token.colorPrimary,
-            fontWeight: 'bold'
-          }}>
-            <FileTextOutlined />
-            {pdfPreviewTitle}
-          </div>
-        }
-        footer={[
-          <Button
-            key="download"
-            icon={<DownloadOutlined />}
-            onClick={() => {
-              const a = document.createElement('a');
-              a.href = pdfPreviewUrl;
-              a.download = pdfPreviewTitle;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-            }}
-            style={{
-              fontFamily: token.fontFamily,
-              fontWeight: 'bold',
-              background: token.colorBgContainer,
-              borderColor: token.colorBorder,
-              color: token.colorText
-            }}
-          >
-            DOWNLOAD
-          </Button>
-        ]}
-        onCancel={() => {
-          setPdfPreviewVisible(false);
-          if (pdfPreviewUrl) {
-            window.URL.revokeObjectURL(pdfPreviewUrl);
-          }
-          setPdfPreviewUrl('');
-          setPdfPreviewTitle('');
-        }}
-        width={1000}
-        style={{
-          fontFamily: token.fontFamily
-        }}
-      >
-        {previewLoading ? (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '70vh',
-            background: token.colorBgContainer,
-            border: `1px solid ${token.colorBorder}`,
-            borderRadius: token.borderRadius
-          }}>
-            <div style={{
-              textAlign: 'center',
-              color: token.colorTextSecondary,
-              fontFamily: token.fontFamily
-            }}>
-              <div style={{
-                fontSize: '24px',
-                marginBottom: token.marginSM,
-                color: token.colorPrimary
-              }}>
-                <LoadingOutlined />
-              </div>
-              <Text>LOADING PDF...</Text>
-            </div>
-          </div>
-        ) : (
-          <iframe
-            src={pdfPreviewUrl}
-            style={{
-              width: '100%',
-              height: '70vh',
-              border: 'none'
-            }}
-            title={pdfPreviewTitle}
-          />
-        )}
-      </Modal>
-
-      {/* Text Preview Modal */}
-      <Modal
-        open={textPreviewVisible}
-        title={
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: token.marginSM,
-            fontFamily: token.fontFamily,
-            color: token.colorPrimary,
-            fontWeight: 'bold'
-          }}>
-            <FileTextOutlined />
-            {textPreviewTitle}
-          </div>
-        }
-        footer={[
-          <Button
-            key="download"
-            icon={<DownloadOutlined />}
-            onClick={() => {
-              const blob = new Blob([textPreviewContent], { type: 'text/plain' });
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = textPreviewTitle;
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
-            }}
-            style={{
-              fontFamily: token.fontFamily,
-              fontWeight: 'bold',
-              background: token.colorBgContainer,
-              borderColor: token.colorBorder,
-              color: token.colorText
-            }}
-          >
-            DOWNLOAD
-          </Button>
-        ]}
-        onCancel={() => {
-          setTextPreviewVisible(false);
-          setTextPreviewContent('');
-          setTextPreviewTitle('');
-        }}
-        width={800}
-        style={{
-          fontFamily: token.fontFamily
-        }}
-      >
-        {previewLoading ? (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '60vh',
-            background: token.colorBgContainer,
-            border: `1px solid ${token.colorBorder}`,
-            borderRadius: token.borderRadius
-          }}>
-            <div style={{
-              textAlign: 'center',
-              color: token.colorTextSecondary,
-              fontFamily: token.fontFamily
-            }}>
-              <div style={{
-                fontSize: '24px',
-                marginBottom: token.marginSM,
-                color: token.colorPrimary
-              }}>
-                <LoadingOutlined />
-              </div>
-              <Text>LOADING TEXT...</Text>
-            </div>
-          </div>
-        ) : (
-          <div style={{
-            maxHeight: '60vh',
-            overflowY: 'auto',
-            background: token.colorBgContainer,
-            border: `1px solid ${token.colorBorder}`,
-            borderRadius: token.borderRadius,
-            padding: token.paddingMD,
-            fontFamily: 'monospace',
-            fontSize: token.fontSizeSM,
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            color: token.colorText
-          }}>
-            {textPreviewContent}
-          </div>
-        )}
-      </Modal>
-
-      {/* Unsupported File Modal */}
-      <Modal
-        open={unsupportedFileModalVisible}
-        title={
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: token.marginSM,
-            fontFamily: token.fontFamily,
-            color: token.colorWarning,
-            fontWeight: 'bold'
-          }}>
-            <FileTextOutlined />
-            UNSUPPORTED FILE TYPE
-          </div>
-        }
-        footer={[
-          <Button
-            key="download"
-            icon={<DownloadOutlined />}
-            onClick={() => {
-              if (unsupportedFileItem) {
-                handleDownload(unsupportedFileItem);
-              }
-              setUnsupportedFileModalVisible(false);
-              setUnsupportedFileItem(null);
-            }}
-            style={{
-              fontFamily: token.fontFamily,
-              fontWeight: 'bold',
-              background: token.colorBgContainer,
-              borderColor: token.colorBorder,
-              color: token.colorText
-            }}
-          >
-            DOWNLOAD FILE
-          </Button>
-        ]}
-        onCancel={() => {
-          setUnsupportedFileModalVisible(false);
-          setUnsupportedFileItem(null);
-        }}
-        width={500}
-        style={{
-          fontFamily: token.fontFamily
-        }}
-      >
-        <div style={{
-          textAlign: 'center',
-          padding: token.paddingLG
-        }}>
-          <FileTextOutlined style={{
-            fontSize: '48px',
-            color: token.colorWarning,
-            marginBottom: token.marginMD
-          }} />
-          <Text style={{
-            display: 'block',
-            marginBottom: token.marginSM,
-            fontFamily: token.fontFamily,
-            fontWeight: 'bold',
-            color: token.colorText
-          }}>
-            {unsupportedFileItem ? getOriginalFilename(unsupportedFileItem.filename) : ''}
-          </Text>
-          <Text style={{
-            color: token.colorTextSecondary,
-            fontFamily: token.fontFamily,
-            fontSize: token.fontSizeSM
-          }}>
-            This file type ({unsupportedFileItem?.contentType}) cannot be previewed in the browser.
-            <br />
-            You can download the file to view it with an appropriate application.
-          </Text>
-        </div>
-      </Modal>
-
       {/* Bulk Delete Confirmation Modal */}
       <Modal
         open={bulkDeleteModalVisible}
@@ -1643,6 +1325,48 @@ const Dashboard: React.FC = () => {
           )}
         </div>
       </Modal>
+
+      {/* File Preview Component */}
+      <FilePreview
+        previewVisible={previewVisible}
+        previewImage={previewImage}
+        previewTitle={previewTitle}
+        previewLoading={previewLoading}
+        pdfPreviewVisible={pdfPreviewVisible}
+        pdfPreviewUrl={pdfPreviewUrl}
+        pdfPreviewTitle={pdfPreviewTitle}
+        textPreviewVisible={textPreviewVisible}
+        textPreviewContent={textPreviewContent}
+        textPreviewTitle={textPreviewTitle}
+        textPreviewFileId={textPreviewFileId}
+        unsupportedFileModalVisible={unsupportedFileModalVisible}
+        unsupportedFileItem={unsupportedFileItem}
+        onCloseImagePreview={() => {
+          setPreviewVisible(false);
+          setPreviewImage('');
+          setPreviewTitle('');
+        }}
+        onClosePdfPreview={() => {
+          setPdfPreviewVisible(false);
+          if (pdfPreviewUrl) {
+            window.URL.revokeObjectURL(pdfPreviewUrl);
+          }
+          setPdfPreviewUrl('');
+          setPdfPreviewTitle('');
+        }}
+        onCloseTextPreview={() => {
+          setTextPreviewVisible(false);
+          setTextPreviewContent('');
+          setTextPreviewTitle('');
+        }}
+        onCloseUnsupportedFile={() => {
+          setUnsupportedFileModalVisible(false);
+          setUnsupportedFileItem(null);
+        }}
+        onDownload={handleDownload}
+        getOriginalFilename={getOriginalFilename}
+        onFileUpdated={handleFileUpdate}
+      />
     </Layout>
   );
 };

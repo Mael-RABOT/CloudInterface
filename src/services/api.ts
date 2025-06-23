@@ -211,6 +211,20 @@ export const itemsAPI = {
   deleteItem: async (id: number): Promise<void> => {
     await api.delete(`/items/${id}`);
   },
+
+  // Update file content
+  updateFile: async (id: number, content: string, filename: string): Promise<UploadResponse> => {
+    const response = await api.put(`/items/${id}/update`, {
+      content: content,
+      filename: filename
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.data;
+  },
 };
 
 export default api;
