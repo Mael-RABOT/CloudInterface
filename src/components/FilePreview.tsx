@@ -9,6 +9,7 @@ import {
 import { Image } from 'antd';
 import type { Item } from '../services/api';
 import Editor from './Editor';
+import { useDeviceDetection } from '../utils/deviceDetection';
 
 const { Text: TypographyText } = Typography;
 
@@ -69,6 +70,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   getOriginalFilename
 }) => {
   const { token } = theme.useToken();
+  const { isMobile } = useDeviceDetection();
 
   return (
     <>
@@ -82,7 +84,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             gap: token.marginSM,
             fontFamily: token.fontFamily,
             color: token.colorPrimary,
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            fontSize: isMobile ? '14px' : '16px'
           }}>
             <EyeOutlined />
             {previewTitle}
@@ -90,9 +93,20 @@ const FilePreview: React.FC<FilePreviewProps> = ({
         }
         footer={null}
         onCancel={onCloseImagePreview}
-        width={800}
+        width={isMobile ? '95vw' : 800}
         style={{
-          fontFamily: token.fontFamily
+          fontFamily: token.fontFamily,
+          top: isMobile ? 20 : 100
+        }}
+        styles={{
+          body: {
+            padding: isMobile ? '12px' : '24px',
+            maxHeight: isMobile ? '70vh' : '80vh',
+            overflow: 'auto'
+          },
+          header: {
+            padding: isMobile ? '12px 16px' : '16px 24px'
+          }
         }}
       >
         {previewLoading ? (
@@ -100,7 +114,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            height: '400px',
+            height: isMobile ? '300px' : '400px',
             background: token.colorBgContainer,
             border: `1px solid ${token.colorBorder}`,
             borderRadius: token.borderRadius
@@ -111,19 +125,25 @@ const FilePreview: React.FC<FilePreviewProps> = ({
               fontFamily: token.fontFamily
             }}>
               <div style={{
-                fontSize: '24px',
+                fontSize: isMobile ? '20px' : '24px',
                 marginBottom: token.marginSM,
                 color: token.colorPrimary
               }}>
                 <LoadingOutlined />
               </div>
-              <TypographyText>LOADING PREVIEW...</TypographyText>
+              <TypographyText style={{ fontSize: isMobile ? '12px' : '14px' }}>
+                LOADING PREVIEW...
+              </TypographyText>
             </div>
           </div>
         ) : (
           <Image
             alt={previewTitle}
-            style={{ width: '100%' }}
+            style={{
+              width: '100%',
+              maxHeight: isMobile ? '60vh' : '70vh',
+              objectFit: 'contain'
+            }}
             src={previewImage}
             preview={false}
             onLoad={() => {
@@ -148,7 +168,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             gap: token.marginSM,
             fontFamily: token.fontFamily,
             color: token.colorPrimary,
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            fontSize: isMobile ? '14px' : '16px'
           }}>
             <FileTextOutlined />
             {pdfPreviewTitle}
@@ -166,21 +187,34 @@ const FilePreview: React.FC<FilePreviewProps> = ({
               a.click();
               document.body.removeChild(a);
             }}
+            size={isMobile ? "small" : "middle"}
             style={{
               fontFamily: token.fontFamily,
               fontWeight: 'bold',
               background: token.colorBgContainer,
               borderColor: token.colorBorder,
-              color: token.colorText
+              color: token.colorText,
+              minHeight: isMobile ? '36px' : 'auto'
             }}
           >
-            DOWNLOAD
+            {isMobile ? 'DOWNLOAD' : 'DOWNLOAD'}
           </Button>
         ]}
         onCancel={onClosePdfPreview}
-        width={1000}
+        width={isMobile ? '95vw' : 1000}
         style={{
-          fontFamily: token.fontFamily
+          fontFamily: token.fontFamily,
+          top: isMobile ? 20 : 100
+        }}
+        styles={{
+          body: {
+            padding: isMobile ? '12px' : '24px',
+            maxHeight: isMobile ? '70vh' : '80vh',
+            overflow: 'auto'
+          },
+          header: {
+            padding: isMobile ? '12px 16px' : '16px 24px'
+          }
         }}
       >
         {previewLoading ? (
@@ -188,7 +222,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            height: '70vh',
+            height: isMobile ? '50vh' : '70vh',
             background: token.colorBgContainer,
             border: `1px solid ${token.colorBorder}`,
             borderRadius: token.borderRadius
@@ -199,13 +233,15 @@ const FilePreview: React.FC<FilePreviewProps> = ({
               fontFamily: token.fontFamily
             }}>
               <div style={{
-                fontSize: '24px',
+                fontSize: isMobile ? '20px' : '24px',
                 marginBottom: token.marginSM,
                 color: token.colorPrimary
               }}>
                 <LoadingOutlined />
               </div>
-              <TypographyText>LOADING PDF...</TypographyText>
+              <TypographyText style={{ fontSize: isMobile ? '12px' : '14px' }}>
+                LOADING PDF...
+              </TypographyText>
             </div>
           </div>
         ) : (
@@ -213,8 +249,9 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             src={pdfPreviewUrl}
             style={{
               width: '100%',
-              height: '70vh',
-              border: 'none'
+              height: isMobile ? '50vh' : '70vh',
+              border: `1px solid ${token.colorBorder}`,
+              borderRadius: token.borderRadius
             }}
             title={pdfPreviewTitle}
           />
@@ -231,7 +268,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             gap: token.marginSM,
             fontFamily: token.fontFamily,
             color: token.colorPrimary,
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            fontSize: isMobile ? '14px' : '16px'
           }}>
             <FileTextOutlined />
             {textPreviewTitle}
@@ -242,36 +280,37 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             key="download"
             icon={<DownloadOutlined />}
             onClick={() => {
-              const blob = new Blob([textPreviewContent], { type: 'text/plain' });
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = textPreviewTitle;
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
+              if (unsupportedFileItem) {
+                onDownload(unsupportedFileItem);
+              }
             }}
+            size={isMobile ? "small" : "middle"}
             style={{
               fontFamily: token.fontFamily,
               fontWeight: 'bold',
               background: token.colorBgContainer,
               borderColor: token.colorBorder,
-              color: token.colorText
+              color: token.colorText,
+              minHeight: isMobile ? '36px' : 'auto'
             }}
           >
-            DOWNLOAD
+            {isMobile ? 'DOWNLOAD' : 'DOWNLOAD'}
           </Button>
         ]}
         onCancel={onCloseTextPreview}
-        width={1200}
+        width={isMobile ? '95vw' : 1000}
         style={{
-          fontFamily: token.fontFamily
+          fontFamily: token.fontFamily,
+          top: isMobile ? 20 : 100
         }}
         styles={{
           body: {
-            padding: 0,
-            height: '80vh'
+            padding: isMobile ? '12px' : '24px',
+            maxHeight: isMobile ? '70vh' : '80vh',
+            overflow: 'auto'
+          },
+          header: {
+            padding: isMobile ? '12px 16px' : '16px 24px'
           }
         }}
       >
@@ -280,7 +319,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            height: '60vh',
+            height: isMobile ? '50vh' : '70vh',
             background: token.colorBgContainer,
             border: `1px solid ${token.colorBorder}`,
             borderRadius: token.borderRadius
@@ -291,31 +330,29 @@ const FilePreview: React.FC<FilePreviewProps> = ({
               fontFamily: token.fontFamily
             }}>
               <div style={{
-                fontSize: '24px',
+                fontSize: isMobile ? '20px' : '24px',
                 marginBottom: token.marginSM,
                 color: token.colorPrimary
               }}>
                 <LoadingOutlined />
               </div>
-              <TypographyText>LOADING TEXT...</TypographyText>
+              <TypographyText style={{ fontSize: isMobile ? '12px' : '14px' }}>
+                LOADING TEXT...
+              </TypographyText>
             </div>
           </div>
         ) : (
-          <div style={{ height: '100%' }}>
-            <Editor
-              initialContent={textPreviewContent}
-              title={textPreviewTitle}
-              readOnly={false}
-              placeholder="Loading content..."
-              autoFocus={false}
-              onSave={(content, title) => {
-                if (onFileUpdated && textPreviewFileId) {
-                  onFileUpdated(textPreviewFileId, content, title);
-                }
-              }}
-              onClose={onCloseTextPreview}
-            />
-          </div>
+          <Editor
+            content={textPreviewContent}
+            filename={textPreviewTitle}
+            fileId={textPreviewFileId}
+            onSave={onFileUpdated}
+            readOnly={false}
+            style={{
+              height: isMobile ? '50vh' : '70vh',
+              fontFamily: token.fontFamily
+            }}
+          />
         )}
       </Modal>
 
@@ -328,8 +365,9 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             alignItems: 'center',
             gap: token.marginSM,
             fontFamily: token.fontFamily,
-            color: token.colorWarning,
-            fontWeight: 'bold'
+            color: token.colorError,
+            fontWeight: 'bold',
+            fontSize: isMobile ? '14px' : '16px'
           }}>
             <FileTextOutlined />
             UNSUPPORTED FILE TYPE
@@ -343,52 +381,85 @@ const FilePreview: React.FC<FilePreviewProps> = ({
               if (unsupportedFileItem) {
                 onDownload(unsupportedFileItem);
               }
-              onCloseUnsupportedFile();
             }}
+            size={isMobile ? "small" : "middle"}
             style={{
               fontFamily: token.fontFamily,
               fontWeight: 'bold',
               background: token.colorBgContainer,
               borderColor: token.colorBorder,
-              color: token.colorText
+              color: token.colorText,
+              minHeight: isMobile ? '36px' : 'auto'
             }}
           >
-            DOWNLOAD FILE
+            {isMobile ? 'DOWNLOAD' : 'DOWNLOAD'}
           </Button>
         ]}
         onCancel={onCloseUnsupportedFile}
-        width={500}
+        width={isMobile ? '90vw' : 500}
         style={{
-          fontFamily: token.fontFamily
+          fontFamily: token.fontFamily,
+          top: isMobile ? 20 : 100
+        }}
+        styles={{
+          body: {
+            padding: isMobile ? '16px' : '24px'
+          },
+          header: {
+            padding: isMobile ? '12px 16px' : '16px 24px'
+          }
         }}
       >
         <div style={{
           textAlign: 'center',
-          padding: token.paddingLG
+          color: token.colorTextSecondary,
+          fontFamily: token.fontFamily
         }}>
-          <FileTextOutlined style={{
-            fontSize: '48px',
-            color: token.colorWarning,
-            marginBottom: token.marginMD
-          }} />
+          <div style={{
+            fontSize: isMobile ? '48px' : '64px',
+            marginBottom: token.marginLG,
+            color: token.colorError
+          }}>
+            <FileTextOutlined />
+          </div>
           <TypographyText style={{
-            display: 'block',
-            marginBottom: token.marginSM,
-            fontFamily: token.fontFamily,
+            fontSize: isMobile ? '16px' : '18px',
             fontWeight: 'bold',
-            color: token.colorText
+            color: token.colorError,
+            display: 'block',
+            marginBottom: token.marginMD
           }}>
-            {unsupportedFileItem ? getOriginalFilename(unsupportedFileItem.filename) : ''}
+            PREVIEW NOT AVAILABLE
           </TypographyText>
           <TypographyText style={{
-            color: token.colorTextSecondary,
-            fontFamily: token.fontFamily,
-            fontSize: token.fontSizeSM
+            fontSize: isMobile ? '14px' : '16px',
+            display: 'block',
+            marginBottom: token.marginSM
           }}>
-            This file type ({unsupportedFileItem?.contentType}) cannot be previewed in the browser.
-            <br />
-            You can download the file to view it with an appropriate application.
+            File: {unsupportedFileItem ? getOriginalFilename(unsupportedFileItem.filename) : 'Unknown'}
           </TypographyText>
+          <TypographyText style={{
+            fontSize: isMobile ? '12px' : '14px',
+            color: token.colorTextTertiary
+          }}>
+            Type: {unsupportedFileItem?.contentType || 'Unknown'}
+          </TypographyText>
+          <div style={{
+            marginTop: token.marginLG,
+            padding: token.paddingMD,
+            background: token.colorBgElevated,
+            border: `1px solid ${token.colorBorder}`,
+            borderRadius: token.borderRadius
+          }}>
+            <TypographyText style={{
+              fontSize: isMobile ? '12px' : '14px',
+              color: token.colorTextSecondary
+            }}>
+              This file type cannot be previewed in the browser.
+              <br />
+              You can download the file to view it with an appropriate application.
+            </TypographyText>
+          </div>
         </div>
       </Modal>
     </>

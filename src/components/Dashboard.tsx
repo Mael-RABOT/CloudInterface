@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Typography, theme, Button, Tree, message, Modal, Upload, Progress, Form, Input, Tooltip, Checkbox } from 'antd';
+import { Layout, Typography, theme, Button, Tree, message, Modal, Upload, Progress, Form, Input, Tooltip, Checkbox, Drawer } from 'antd';
 import {
   FileTextOutlined,
-  DatabaseOutlined,
   LogoutOutlined,
   FolderOutlined,
   HomeOutlined,
@@ -22,12 +21,15 @@ import {
   FileMarkdownOutlined,
   FileImageOutlined,
   FileUnknownOutlined,
+  MenuOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { itemsAPI } from '../services/api';
 import type { Item } from '../services/api';
 import type { Key } from 'antd/es/table/interface';
 import FilePreview from './FilePreview';
+import { useDeviceDetection } from '../utils/deviceDetection';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -42,6 +44,161 @@ const ASCII_HEADER = `
    ║              [SYSTEM ONLINE] [SECURE]             ║            ╚██████╗███████╗╚██████╔╝╚██████╔╝██████╔╝             ║   SECURITY: ACTIVE   ║
    ╚═══════════════════════════════════════════════════╝             ╚═════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝              ╚══════════════════════╝
 `;
+
+// Mobile File Item Component
+interface MobileFileItemProps {
+  file: Item;
+  onPreview: (file: Item) => void;
+  onDownload: (file: Item) => void;
+  onDelete: (file: Item) => void;
+  selected: boolean;
+  onSelect: (fileId: number, selected: boolean) => void;
+}
+
+const MobileFileItem: React.FC<MobileFileItemProps> = ({
+  file,
+  onPreview,
+  onDownload,
+  onDelete,
+  selected,
+  onSelect
+}) => {
+  const getFileIcon = (contentType: string, filename: string) => {
+    const extension = filename.split('.').pop()?.toLowerCase();
+
+    if (contentType.includes('image')) return <FileImageOutlined />;
+    if (contentType.includes('pdf')) return <FilePdfOutlined />;
+    if (contentType.includes('text')) return <FileTextOutlined />;
+    if (extension === 'zip' || extension === 'rar' || extension === '7z') return <FileZipOutlined />;
+    if (extension === 'doc' || extension === 'docx') return <FileWordOutlined />;
+    if (extension === 'xls' || extension === 'xlsx') return <FileExcelOutlined />;
+    if (extension === 'ppt' || extension === 'pptx') return <FilePptOutlined />;
+    if (extension === 'mp4' || extension === 'avi' || extension === 'mov') return <VideoCameraOutlined />;
+    if (extension === 'mp3' || extension === 'wav' || extension === 'flac') return <SoundOutlined />;
+    if (extension === 'exe' || extension === 'msi') return <SettingOutlined />;
+    if (extension === 'js' || extension === 'ts' || extension === 'py' || extension === 'java') return <CodeOutlined />;
+    if (extension === 'html' || extension === 'css' || extension === 'xml') return <CodeOutlined />;
+    if (extension === 'json' || extension === 'yaml' || extension === 'yml') return <CodeOutlined />;
+    if (extension === 'md') return <FileMarkdownOutlined />;
+    if (extension === 'txt') return <FileTextOutlined />;
+    if (extension === 'log') return <FileTextOutlined />;
+    if (extension === 'bak' || extension === 'tmp') return <FileOutlined />;
+    return <FileUnknownOutlined />;
+  };
+
+  const formatFilename = (filename: string) => {
+    const lastDashIndex = filename.lastIndexOf('-');
+    const lastDotIndex = filename.lastIndexOf('.');
+
+    if (lastDashIndex !== -1 && lastDotIndex > lastDashIndex) {
+      const name = filename.substring(0, lastDashIndex);
+      const extension = filename.substring(lastDotIndex);
+      return name + extension;
+    }
+
+    return filename;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  return (
+    <div
+      className="file-item-mobile"
+      onClick={() => onPreview(file)}
+      style={{
+        background: selected ? 'rgba(0, 255, 0, 0.1)' : 'rgba(0, 255, 0, 0.05)',
+        border: `1px solid ${selected ? '#00ff00' : 'rgba(0, 255, 0, 0.3)'}`,
+        borderRadius: '12px',
+        padding: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease'
+      }}
+    >
+      <Checkbox
+        checked={selected}
+        onChange={(e) => {
+          e.stopPropagation();
+          onSelect(file.id, e.target.checked);
+        }}
+        style={{
+          transform: 'scale(1.2)',
+          filter: 'brightness(1.2) contrast(1.2)'
+        }}
+        className="custom-checkbox"
+      />
+
+      <div className="file-icon" style={{ fontSize: '24px', color: '#00ff00' }}>
+        {getFileIcon(file.contentType, file.filename)}
+      </div>
+
+      <div className="file-info" style={{ flex: 1, minWidth: 0 }}>
+        <div className="file-name" style={{
+          fontSize: '14px',
+          fontWeight: 'bold',
+          color: '#00ff00',
+          marginBottom: '4px',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          {formatFilename(file.filename)}
+        </div>
+        <div className="file-meta" style={{
+          fontSize: '12px',
+          color: 'rgba(0, 255, 0, 0.7)'
+        }}>
+          {formatFileSize(file.size || 0)} • {file.contentType}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <Button
+          size="small"
+          type="text"
+          icon={<InboxOutlined />}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDownload(file);
+          }}
+          style={{
+            color: '#00ff00',
+            background: 'rgba(0, 255, 0, 0.1)',
+            border: '1px solid rgba(0, 255, 0, 0.3)',
+            borderRadius: '6px',
+            minWidth: '32px',
+            height: '32px'
+          }}
+        />
+        <Button
+          size="small"
+          type="text"
+          danger
+          icon={<DeleteOutlined />}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(file);
+          }}
+          style={{
+            background: 'rgba(255, 77, 79, 0.1)',
+            border: '1px solid rgba(255, 77, 79, 0.3)',
+            borderRadius: '6px',
+            minWidth: '32px',
+            height: '32px'
+          }}
+        />
+      </div>
+    </div>
+  );
+};
 
 // Custom File Display Component
 interface FileGridProps {
@@ -345,6 +502,7 @@ const CustomTree: React.FC<{ treeData: any[]; onSelect: (selectedKeys: Key[]) =>
 const Dashboard: React.FC = () => {
   const { token } = theme.useToken();
   const { logout, user } = useAuth();
+  const { isMobile, isSmallMobile } = useDeviceDetection();
   const [currentLocation, setCurrentLocation] = useState<string>('');
   const [files, setFiles] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
@@ -355,6 +513,9 @@ const Dashboard: React.FC = () => {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [currentUploadFile, setCurrentUploadFile] = useState('');
   const [uploadForm] = Form.useForm();
+
+  // Mobile navigation state
+  const [mobileDrawerVisible, setMobileDrawerVisible] = useState(false);
 
   // Bulk delete state
   const [selectedFileIds, setSelectedFileIds] = useState<Set<number>>(new Set());
@@ -639,15 +800,13 @@ const Dashboard: React.FC = () => {
 
   // Bulk delete handlers
   const handleFileSelect = (fileId: number, selected: boolean) => {
-    setSelectedFileIds(prev => {
-      const newSet = new Set(prev);
-      if (selected) {
-        newSet.add(fileId);
-      } else {
-        newSet.delete(fileId);
-      }
-      return newSet;
-    });
+    const newSelectedIds = new Set(selectedFileIds);
+    if (selected) {
+      newSelectedIds.add(fileId);
+    } else {
+      newSelectedIds.delete(fileId);
+    }
+    setSelectedFileIds(newSelectedIds);
   };
 
   const handleBulkDelete = async () => {
@@ -718,6 +877,22 @@ const Dashboard: React.FC = () => {
     setSelectedFileIds(new Set());
   };
 
+  // Mobile navigation handlers
+  const handleMobileDrawerOpen = () => {
+    setMobileDrawerVisible(true);
+  };
+
+  const handleMobileDrawerClose = () => {
+    setMobileDrawerVisible(false);
+  };
+
+  const handleMobileFolderSelect = (selectedKeys: Key[]) => {
+    if (selectedKeys.length > 0) {
+      setCurrentLocation(selectedKeys[0] as string);
+      setMobileDrawerVisible(false); // Close drawer after selection
+    }
+  };
+
   return (
     <Layout style={{
       minHeight: '100vh',
@@ -728,21 +903,39 @@ const Dashboard: React.FC = () => {
       <Header style={{
         background: '#000',
         borderBottom: `2px solid ${token.colorPrimary}`,
-        padding: `0 ${token.paddingXL}px`,
+        padding: isMobile ? `0 ${token.paddingMD}px` : `0 ${token.paddingXL}px`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         height: 'auto',
-        minHeight: '120px'
+        minHeight: isMobile ? '80px' : '120px'
       }}>
+        {/* Mobile Menu Button */}
+        {isMobile && (
+          <Button
+            type="text"
+            icon={<MenuOutlined />}
+            onClick={handleMobileDrawerOpen}
+            style={{
+              color: '#00ff00',
+              background: 'rgba(0, 255, 0, 0.1)',
+              border: '1px solid rgba(0, 255, 0, 0.3)',
+              borderRadius: '8px',
+              padding: '8px',
+              marginRight: '12px'
+            }}
+          />
+        )}
+
         <div style={{ flex: 1 }}>
           <pre style={{
             fontFamily: token.fontFamily,
-            fontSize: '10px',
+            fontSize: isSmallMobile ? '6px' : isMobile ? '8px' : '10px',
             lineHeight: 1.2,
             color: token.colorPrimary,
             margin: 0,
-            whiteSpace: 'pre'
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-all'
           }}>
             {ASCII_HEADER}
           </pre>
@@ -751,13 +944,15 @@ const Dashboard: React.FC = () => {
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: token.marginMD
+          gap: isMobile ? token.marginSM : token.marginMD,
+          flexWrap: isMobile ? 'wrap' : 'nowrap'
         }}>
           <div style={{
-            padding: `${token.paddingSM}px ${token.paddingMD}px`,
+            padding: isMobile ? `${token.paddingXS}px ${token.paddingSM}px` : `${token.paddingSM}px ${token.paddingMD}px`,
             background: token.colorBgContainer,
             borderRadius: token.borderRadius,
-            color: token.colorTextSecondary
+            color: token.colorTextSecondary,
+            fontSize: isMobile ? '12px' : '14px'
           }}>
             USER: {user?.username || 'UNKNOWN'}
           </div>
@@ -773,81 +968,126 @@ const Dashboard: React.FC = () => {
               outlineColor: token.colorError,
               background: token.colorBgContainer,
               borderRadius: token.borderRadius,
-              padding: `${token.paddingSM}px ${token.paddingMD}px`,
+              padding: isMobile ? `${token.paddingXS}px ${token.paddingSM}px` : `${token.paddingSM}px ${token.paddingMD}px`,
               border: `1px solid ${token.colorBorder}`,
-              fontSize: token.fontSizeSM,
+              fontSize: isMobile ? '12px' : token.fontSizeSM,
+              minHeight: isMobile ? '36px' : 'auto'
             }}
           >
-            LOGOUT
+            {isMobile ? 'LOGOUT' : 'LOGOUT'}
           </Button>
         </div>
       </Header>
 
       <Layout style={{ position: 'relative' }}>
-        {/* Sidebar */}
-        <Sider
-          width={250}
-          style={{
-            background: '#001100',
-            borderRight: `2px solid ${token.colorBorder}`,
-            position: 'relative'
-          }}
-          theme="dark"
-        >
-          <div style={{
-            padding: token.paddingLG,
-            borderBottom: `1px solid ${token.colorBorder}`,
-            background: token.colorBgContainer
-          }}>
-            <Title level={4} style={{
-              margin: 0,
-              color: token.colorPrimary,
-              fontFamily: token.fontFamily,
-              textAlign: 'center',
-              fontWeight: 'bold'
+        {/* Desktop Sidebar */}
+        {!isMobile && (
+          <Sider
+            width={250}
+            style={{
+              background: '#001100',
+              borderRight: `2px solid ${token.colorBorder}`,
+              position: 'relative'
+            }}
+            theme="dark"
+          >
+            <div style={{
+              padding: token.paddingLG,
+              borderBottom: `1px solid ${token.colorBorder}`,
+              background: token.colorBgContainer
             }}>
-              LOCATIONS
-            </Title>
-          </div>
+              <Title level={4} style={{
+                margin: 0,
+                color: token.colorPrimary,
+                fontFamily: token.fontFamily,
+                textAlign: 'center',
+                fontWeight: 'bold'
+              }}>
+                LOCATIONS
+              </Title>
+            </div>
 
-          <div style={{
-            padding: token.paddingMD,
-            height: 'calc(100vh - 200px)',
-            overflowY: 'auto'
-          }}>
-            <CustomTree treeData={folderTree} onSelect={handleFolderSelect} />
-          </div>
-        </Sider>
+            <div style={{
+              padding: token.paddingMD,
+              height: 'calc(100vh - 200px)',
+              overflowY: 'auto'
+            }}>
+              <CustomTree treeData={folderTree} onSelect={handleFolderSelect} />
+            </div>
+          </Sider>
+        )}
+
+        {/* Mobile Drawer */}
+        {isMobile && (
+          <Drawer
+            title={
+              <Title level={4} style={{
+                margin: 0,
+                color: token.colorPrimary,
+                fontFamily: token.fontFamily,
+                fontWeight: 'bold'
+              }}>
+                LOCATIONS
+              </Title>
+            }
+            placement="left"
+            onClose={handleMobileDrawerClose}
+            open={mobileDrawerVisible}
+            width={280}
+            styles={{
+              body: {
+                padding: 0,
+                background: '#001100'
+              },
+              header: {
+                background: token.colorBgContainer,
+                borderBottom: `1px solid ${token.colorBorder}`
+              }
+            }}
+          >
+            <div style={{
+              padding: token.paddingMD,
+              height: 'calc(100vh - 120px)',
+              overflowY: 'auto'
+            }}>
+              <CustomTree treeData={folderTree} onSelect={handleMobileFolderSelect} />
+            </div>
+          </Drawer>
+        )}
 
         {/* Main Content */}
         <Content style={{
           background: '#000',
-          padding: token.paddingLG,
-          position: 'relative'
+          padding: isMobile ? token.paddingSM : token.paddingLG,
+          position: 'relative',
+          marginLeft: isMobile ? 0 : undefined
         }}>
           <div style={{
             background: token.colorBgElevated,
             border: `2px solid ${token.colorBorder}`,
             borderRadius: token.borderRadius,
-            minHeight: 'calc(100vh - 200px)',
+            minHeight: isMobile ? 'calc(100vh - 120px)' : 'calc(100vh - 200px)',
             position: 'relative',
             overflow: 'hidden'
           }}>
             {/* Content Header */}
             <div style={{
-              padding: `${token.paddingLG}px ${token.paddingXL}px`,
+              padding: isMobile ? `${token.paddingMD}px ${token.paddingLG}px` : `${token.paddingLG}px ${token.paddingXL}px`,
               borderBottom: `1px solid ${token.colorBorder}`,
               background: token.colorBgContainer,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between'
+              justifyContent: 'space-between',
+              flexWrap: isMobile ? 'wrap' : 'nowrap',
+              gap: isMobile ? token.marginSM : 0
             }}>
-              <div>
-                <Title level={4} style={{
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Title level={isMobile ? 5 : 4} style={{
                   margin: 0,
                   color: token.colorPrimary,
                   fontFamily: token.fontFamily,
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  fontSize: isMobile ? '16px' : undefined
                 }}>
                   <FileTextOutlined style={{ marginRight: token.marginSM }} />
                   FILES: {currentLocation || 'ROOT'}
@@ -855,7 +1095,7 @@ const Dashboard: React.FC = () => {
                 <Text style={{
                   color: token.colorTextSecondary,
                   fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
+                  fontSize: isMobile ? '12px' : token.fontSizeSM,
                   display: 'block',
                   marginTop: token.marginXS
                 }}>
@@ -871,7 +1111,8 @@ const Dashboard: React.FC = () => {
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: token.marginMD
+                gap: isMobile ? token.marginSM : token.marginMD,
+                flexWrap: isMobile ? 'wrap' : 'nowrap'
               }}>
                 {/* Bulk Delete Button */}
                 {selectedFileIds.size > 0 && (
@@ -879,16 +1120,18 @@ const Dashboard: React.FC = () => {
                     danger
                     icon={<DeleteOutlined />}
                     onClick={handleBulkDelete}
+                    size={isMobile ? "small" : "middle"}
                     style={{
                       fontFamily: token.fontFamily,
                       fontWeight: 'bold',
                       background: token.colorError,
                       borderColor: token.colorError,
                       color: '#fff',
-                      boxShadow: '0 2px 4px rgba(255, 77, 79, 0.3)'
+                      boxShadow: '0 2px 4px rgba(255, 77, 79, 0.3)',
+                      minHeight: isMobile ? '36px' : 'auto'
                     }}
                   >
-                    DELETE ({selectedFileIds.size})
+                    {isMobile ? `DEL (${selectedFileIds.size})` : `DELETE (${selectedFileIds.size})`}
                   </Button>
                 )}
 
@@ -898,84 +1141,131 @@ const Dashboard: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: token.marginSM,
-                    padding: `${token.paddingSM}px ${token.paddingMD}px`,
+                    padding: isMobile ? `${token.paddingXS}px ${token.paddingSM}px` : `${token.paddingSM}px ${token.paddingMD}px`,
                     background: token.colorBgElevated,
                     border: `1px solid ${token.colorBorder}`,
                     borderRadius: token.borderRadius
                   }}>
                     <Button
-                      size="small"
+                      size={isMobile ? "small" : "small"}
                       type="text"
                       onClick={handleSelectAll}
                       style={{
                         fontFamily: token.fontFamily,
-                        fontSize: token.fontSizeSM,
-                        color: token.colorPrimary
+                        fontSize: isMobile ? '11px' : token.fontSizeSM,
+                        color: token.colorPrimary,
+                        minHeight: isMobile ? '28px' : 'auto'
                       }}
                     >
-                      SELECT ALL
+                      {isMobile ? 'ALL' : 'SELECT ALL'}
                     </Button>
                     <Button
-                      size="small"
+                      size={isMobile ? "small" : "small"}
                       type="text"
                       onClick={handleClearSelection}
                       style={{
                         fontFamily: token.fontFamily,
-                        fontSize: token.fontSizeSM,
-                        color: token.colorTextSecondary
+                        fontSize: isMobile ? '11px' : token.fontSizeSM,
+                        color: token.colorTextSecondary,
+                        minHeight: isMobile ? '28px' : 'auto'
                       }}
                     >
-                      CLEAR
+                      {isMobile ? 'CLEAR' : 'CLEAR'}
                     </Button>
                   </div>
                 )}
 
+                {/* Upload Button */}
                 <Button
                   type="primary"
                   icon={<UploadOutlined />}
                   onClick={handleUploadModalOpen}
+                  size={isMobile ? "small" : "middle"}
                   style={{
                     fontFamily: token.fontFamily,
                     fontWeight: 'bold',
                     background: token.colorPrimary,
-                    borderColor: token.colorPrimary
+                    borderColor: token.colorPrimary,
+                    boxShadow: `0 2px 4px ${token.colorPrimary}40`,
+                    minHeight: isMobile ? '36px' : 'auto'
                   }}
                 >
-                  UPLOAD FILES
+                  {isMobile ? 'UPLOAD' : 'UPLOAD'}
                 </Button>
-
-                <div style={{
-                  padding: `${token.paddingSM}px ${token.paddingMD}px`,
-                  background: token.colorBgContainer,
-                  border: `1px solid ${token.colorBorder}`,
-                  borderRadius: token.borderRadius
-                }}>
-                  <Text style={{
-                    color: token.colorSuccess,
-                    fontFamily: token.fontFamily,
-                    fontSize: token.fontSizeSM,
-                    fontWeight: 'bold'
-                  }}>
-                    <DatabaseOutlined style={{ marginRight: token.marginXS }} />
-                    SYSTEM ONLINE
-                  </Text>
-                </div>
               </div>
             </div>
 
-            {/* File Grid */}
-            <FileGrid
-              files={filteredFiles}
-              onPreview={handlePreview}
-              onDownload={handleDownload}
-              onDelete={handleDelete}
-              loading={loading}
-              selectedFileIds={selectedFileIds}
-              onFileSelect={handleFileSelect}
-            />
+            {/* File Display */}
+            <div style={{
+              padding: isMobile ? token.paddingSM : token.paddingLG,
+              height: isMobile ? 'calc(100vh - 200px)' : 'calc(100vh - 280px)',
+              overflowY: 'auto'
+            }}>
+              {loading ? (
+                <div style={{
+                  padding: token.paddingXL,
+                  textAlign: 'center',
+                  color: token.colorTextSecondary,
+                  fontFamily: token.fontFamily
+                }}>
+                  <Text>LOADING FILES...</Text>
+                </div>
+              ) : filteredFiles.length === 0 ? (
+                <div style={{
+                  padding: token.paddingXL,
+                  textAlign: 'center',
+                  color: token.colorTextSecondary,
+                  fontFamily: token.fontFamily
+                }}>
+                  <Text>NO FILES FOUND IN THIS LOCATION</Text>
+                  <br />
+                  <Text style={{ fontSize: token.fontSizeSM }}>UPLOAD FILES TO GET STARTED</Text>
+                </div>
+              ) : isMobile ? (
+                // Mobile file grid
+                <div className="file-grid-mobile">
+                  {filteredFiles.map((file) => (
+                    <MobileFileItem
+                      key={file.id}
+                      file={file}
+                      onPreview={handlePreview}
+                      onDownload={handleDownload}
+                      onDelete={handleDelete}
+                      selected={selectedFileIds.has(file.id)}
+                      onSelect={handleFileSelect}
+                    />
+                  ))}
+                </div>
+              ) : (
+                // Desktop file grid
+                <FileGrid
+                  files={filteredFiles}
+                  onPreview={handlePreview}
+                  onDownload={handleDownload}
+                  onDelete={handleDelete}
+                  loading={loading}
+                  selectedFileIds={selectedFileIds}
+                  onFileSelect={handleFileSelect}
+                />
+              )}
+            </div>
           </div>
         </Content>
       </Layout>
+
+      {/* Mobile Floating Action Button */}
+      {isMobile && (
+        <div className="mobile-actions">
+          <Button
+            type="primary"
+            shape="circle"
+            icon={<PlusOutlined />}
+            onClick={handleUploadModalOpen}
+            className="mobile-fab"
+            size="large"
+          />
+        </div>
+      )}
 
       {/* Upload Modal */}
       <Modal
@@ -986,7 +1276,8 @@ const Dashboard: React.FC = () => {
             gap: token.marginSM,
             fontFamily: token.fontFamily,
             color: token.colorPrimary,
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            fontSize: isMobile ? '16px' : '18px'
           }}>
             <UploadOutlined />
             UPLOAD FILES
@@ -995,13 +1286,19 @@ const Dashboard: React.FC = () => {
         open={uploadModalVisible}
         onCancel={handleUploadModalClose}
         footer={null}
-        width={600}
+        width={isMobile ? '95vw' : 600}
         style={{
-          fontFamily: token.fontFamily
+          fontFamily: token.fontFamily,
+          top: isMobile ? 20 : 100
         }}
         styles={{
           body: {
-            padding: token.paddingLG
+            padding: isMobile ? '16px' : '24px',
+            maxHeight: isMobile ? '70vh' : '80vh',
+            overflow: 'auto'
+          },
+          header: {
+            padding: isMobile ? '12px 16px' : '16px 24px'
           }
         }}
       >
@@ -1017,7 +1314,8 @@ const Dashboard: React.FC = () => {
               <Text style={{
                 color: token.colorPrimary,
                 fontFamily: token.fontFamily,
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                fontSize: isMobile ? '14px' : '16px'
               }}>
                 LOCATION
               </Text>
@@ -1026,11 +1324,14 @@ const Dashboard: React.FC = () => {
           >
             <Input
               placeholder="e.g., documents, photos, etc."
+              size={isMobile ? "large" : "middle"}
               style={{
                 fontFamily: token.fontFamily,
                 background: token.colorBgContainer,
                 border: `1px solid ${token.colorBorder}`,
-                color: token.colorText
+                color: token.colorText,
+                minHeight: isMobile ? '48px' : 'auto',
+                fontSize: isMobile ? '16px' : '14px'
               }}
               prefix={<FolderOutlined style={{ color: token.colorPrimary }} />}
             />
@@ -1041,7 +1342,8 @@ const Dashboard: React.FC = () => {
               <Text style={{
                 color: token.colorPrimary,
                 fontFamily: token.fontFamily,
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                fontSize: isMobile ? '14px' : '16px'
               }}>
                 SELECT FILES
               </Text>
@@ -1057,31 +1359,38 @@ const Dashboard: React.FC = () => {
               accept="*/*"
               multiple
               disabled={uploadLoading}
+              style={{
+                padding: isMobile ? '24px 16px' : '32px 24px'
+              }}
             >
               <p className="ant-upload-drag-icon">
-                <InboxOutlined style={{ fontSize: '48px', color: token.colorPrimary }} />
+                <InboxOutlined style={{
+                  fontSize: isMobile ? '36px' : '48px',
+                  color: token.colorPrimary
+                }} />
               </p>
               <p className="ant-upload-text" style={{
                 color: token.colorText,
                 fontFamily: token.fontFamily,
-                fontSize: token.fontSizeLG,
-                fontWeight: 'bold'
+                fontSize: isMobile ? '16px' : token.fontSizeLG,
+                fontWeight: 'bold',
+                margin: isMobile ? '8px 0' : '12px 0'
               }}>
-                Click or drag files to this area to upload
+                {isMobile ? 'Tap to select files' : 'Click or drag files to this area to upload'}
               </p>
               <p className="ant-upload-hint" style={{
                 color: token.colorTextSecondary,
                 fontFamily: token.fontFamily,
-                fontSize: token.fontSizeSM
+                fontSize: isMobile ? '12px' : token.fontSizeSM
               }}>
-                Support for multiple file uploads. Files will be uploaded to the selected location.
+                {isMobile ? 'Support for multiple file uploads' : 'Support for multiple file uploads. Files will be uploaded to the selected location.'}
               </p>
             </Dragger>
 
             {selectedFiles.length > 0 && (
               <div style={{
                 marginTop: token.marginMD,
-                padding: token.paddingMD,
+                padding: isMobile ? token.paddingSM : token.paddingMD,
                 background: token.colorBgElevated,
                 border: `1px solid ${token.colorSuccess}`,
                 borderRadius: token.borderRadius
@@ -1090,15 +1399,16 @@ const Dashboard: React.FC = () => {
                   fontFamily: token.fontFamily,
                   color: token.colorSuccess,
                   fontWeight: 'bold',
-                  marginBottom: token.marginSM
+                  marginBottom: token.marginSM,
+                  fontSize: isMobile ? '14px' : '16px'
                 }}>
                   SELECTED FILES ({selectedFiles.length}):
                 </div>
                 {selectedFiles.map((file, index) => (
                   <div key={index} style={{
-                    fontSize: token.fontSizeSM,
+                    fontSize: isMobile ? '12px' : token.fontSizeSM,
                     marginBottom: token.marginXS,
-                    padding: `${token.paddingXS}px ${token.paddingSM}px`,
+                    padding: isMobile ? `${token.paddingXS}px ${token.paddingSM}px` : `${token.paddingXS}px ${token.paddingMD}px`,
                     background: token.colorBgContainer,
                     border: `1px solid ${token.colorBorder}`,
                     borderRadius: token.borderRadiusSM,
@@ -1107,19 +1417,27 @@ const Dashboard: React.FC = () => {
                     alignItems: 'center',
                     fontFamily: token.fontFamily
                   }}>
-                    <span style={{ color: token.colorText }}>
+                    <span style={{
+                      color: token.colorText,
+                      flex: 1,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      marginRight: isMobile ? '8px' : '12px'
+                    }}>
                       {getOriginalFilename(file.name)} ({Math.round(file.size / 1024)} KB)
                     </span>
                     <Tooltip title="Remove this file">
                       <Button
                         type="text"
-                        size="small"
+                        size={isMobile ? "small" : "small"}
                         danger
                         icon={<DeleteOutlined />}
                         onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== index))}
                         style={{
-                          padding: '0 4px',
-                          minWidth: 'auto',
+                          padding: isMobile ? '4px' : '0 4px',
+                          minWidth: isMobile ? '32px' : 'auto',
+                          minHeight: isMobile ? '32px' : 'auto',
                           fontFamily: token.fontFamily
                         }}
                       />
@@ -1127,9 +1445,9 @@ const Dashboard: React.FC = () => {
                   </div>
                 ))}
                 <div style={{
-                  fontSize: token.fontSizeSM,
+                  fontSize: isMobile ? '12px' : token.fontSizeSM,
                   marginTop: token.marginSM,
-                  padding: `${token.paddingXS}px ${token.paddingSM}px`,
+                  padding: isMobile ? `${token.paddingXS}px ${token.paddingSM}px` : `${token.paddingXS}px ${token.paddingMD}px`,
                   background: token.colorBgContainer,
                   border: `1px solid ${token.colorInfo}`,
                   borderRadius: token.borderRadiusSM,
@@ -1142,12 +1460,13 @@ const Dashboard: React.FC = () => {
                 </div>
                 <Button
                   type="text"
-                  size="small"
+                  size={isMobile ? "small" : "small"}
                   onClick={() => setSelectedFiles([])}
                   style={{
                     marginTop: token.marginSM,
                     fontFamily: token.fontFamily,
-                    color: token.colorWarning
+                    color: token.colorWarning,
+                    minHeight: isMobile ? '32px' : 'auto'
                   }}
                 >
                   CLEAR ALL
@@ -1162,7 +1481,8 @@ const Dashboard: React.FC = () => {
                 <Text style={{
                   color: token.colorPrimary,
                   fontFamily: token.fontFamily,
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  fontSize: isMobile ? '14px' : '16px'
                 }}>
                   UPLOAD PROGRESS
                 </Text>
@@ -1171,7 +1491,7 @@ const Dashboard: React.FC = () => {
               {currentUploadFile && (
                 <div style={{
                   marginBottom: token.marginSM,
-                  fontSize: token.fontSizeSM,
+                  fontSize: isMobile ? '12px' : token.fontSizeSM,
                   fontFamily: token.fontFamily,
                   color: token.colorTextSecondary
                 }}>
@@ -1195,11 +1515,13 @@ const Dashboard: React.FC = () => {
               type="primary"
               htmlType="submit"
               loading={uploadLoading}
+              size={isMobile ? "large" : "middle"}
               style={{
                 fontFamily: token.fontFamily,
                 fontWeight: 'bold',
                 width: '100%',
-                height: '40px'
+                height: isMobile ? '48px' : '40px',
+                fontSize: isMobile ? '16px' : '14px'
               }}
               disabled={selectedFiles.length === 0}
             >
@@ -1211,101 +1533,110 @@ const Dashboard: React.FC = () => {
 
       {/* Bulk Delete Confirmation Modal */}
       <Modal
-        open={bulkDeleteModalVisible}
         title={
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: token.marginSM,
             fontFamily: token.fontFamily,
-            color: token.colorWarning,
-            fontWeight: 'bold'
+            color: token.colorError,
+            fontWeight: 'bold',
+            fontSize: isMobile ? '16px' : '18px'
           }}>
-            <FileTextOutlined />
+            <DeleteOutlined />
             CONFIRM BULK DELETE
           </div>
         }
+        open={bulkDeleteModalVisible}
+        onCancel={() => setBulkDeleteModalVisible(false)}
         footer={[
           <Button
             key="cancel"
-            icon={<DeleteOutlined />}
-            onClick={() => {
-              setBulkDeleteModalVisible(false);
-            }}
-            disabled={bulkDeleteLoading}
+            onClick={() => setBulkDeleteModalVisible(false)}
+            size={isMobile ? "large" : "middle"}
             style={{
               fontFamily: token.fontFamily,
-              fontWeight: 'bold',
-              background: token.colorBgContainer,
-              borderColor: token.colorBorder,
-              color: token.colorText
+              minHeight: isMobile ? '48px' : 'auto'
             }}
           >
             CANCEL
           </Button>,
           <Button
             key="confirm"
-            icon={<DeleteOutlined />}
-            onClick={confirmBulkDelete}
+            type="primary"
+            danger
             loading={bulkDeleteLoading}
-            disabled={bulkDeleteLoading}
+            onClick={confirmBulkDelete}
+            size={isMobile ? "large" : "middle"}
             style={{
               fontFamily: token.fontFamily,
               fontWeight: 'bold',
-              background: token.colorError,
-              borderColor: token.colorError,
-              color: token.colorBgContainer
+              minHeight: isMobile ? '48px' : 'auto'
             }}
           >
-            {bulkDeleteLoading ? 'DELETING...' : 'CONFIRM'}
+            {bulkDeleteLoading ? 'DELETING...' : `DELETE ${selectedFileIds.size} FILE${selectedFileIds.size !== 1 ? 'S' : ''}`}
           </Button>
         ]}
-        onCancel={() => {
-          if (!bulkDeleteLoading) {
-            setBulkDeleteModalVisible(false);
-          }
-        }}
-        width={500}
+        width={isMobile ? '90vw' : 500}
         style={{
-          fontFamily: token.fontFamily
+          fontFamily: token.fontFamily,
+          top: isMobile ? 20 : 100
+        }}
+        styles={{
+          body: {
+            padding: isMobile ? '16px' : '24px'
+          },
+          header: {
+            padding: isMobile ? '12px 16px' : '16px 24px'
+          }
         }}
       >
         <div style={{
           textAlign: 'center',
-          padding: token.paddingLG
+          color: token.colorTextSecondary,
+          fontFamily: token.fontFamily
         }}>
-          <FileTextOutlined style={{
-            fontSize: '48px',
-            color: token.colorWarning,
-            marginBottom: token.marginMD
-          }} />
-          <Text style={{
-            display: 'block',
-            marginBottom: token.marginSM,
-            fontFamily: token.fontFamily,
+          <div style={{
+            fontSize: isMobile ? '48px' : '64px',
+            marginBottom: token.marginLG,
+            color: token.colorError
+          }}>
+            <DeleteOutlined />
+          </div>
+          <Typography.Text style={{
+            fontSize: isMobile ? '16px' : '18px',
             fontWeight: 'bold',
-            color: token.colorText
+            color: token.colorError,
+            display: 'block',
+            marginBottom: token.marginMD
           }}>
-            Are you sure you want to delete {selectedFileIds.size} files?
-          </Text>
-          <Text style={{
-            color: token.colorTextSecondary,
-            fontFamily: token.fontFamily,
-            fontSize: token.fontSizeSM,
-            marginBottom: token.marginLG
+            WARNING: IRREVERSIBLE ACTION
+          </Typography.Text>
+          <Typography.Text style={{
+            fontSize: isMobile ? '14px' : '16px',
+            display: 'block',
+            marginBottom: token.marginSM
           }}>
-            This action cannot be undone.
-          </Text>
-
-          {bulkDeleteLoading && (
+            You are about to permanently delete {selectedFileIds.size} file{selectedFileIds.size !== 1 ? 's' : ''}.
+          </Typography.Text>
+          <Typography.Text style={{
+            fontSize: isMobile ? '12px' : '14px',
+            color: token.colorTextTertiary
+          }}>
+            This action cannot be undone. All selected files will be permanently removed from the system.
+          </Typography.Text>
+          {bulkDeleteProgress > 0 && (
             <div style={{
               marginTop: token.marginLG,
-              textAlign: 'left'
+              padding: token.paddingMD,
+              background: token.colorBgElevated,
+              border: `1px solid ${token.colorBorder}`,
+              borderRadius: token.borderRadius
             }}>
               {currentDeletingFile && (
                 <div style={{
                   marginBottom: token.marginSM,
-                  fontSize: token.fontSizeSM,
+                  fontSize: isMobile ? '12px' : token.fontSizeSM,
                   fontFamily: token.fontFamily,
                   color: token.colorTextSecondary
                 }}>
@@ -1326,7 +1657,7 @@ const Dashboard: React.FC = () => {
         </div>
       </Modal>
 
-      {/* File Preview Component */}
+      {/* File Preview Components */}
       <FilePreview
         previewVisible={previewVisible}
         previewImage={previewImage}
@@ -1348,9 +1679,6 @@ const Dashboard: React.FC = () => {
         }}
         onClosePdfPreview={() => {
           setPdfPreviewVisible(false);
-          if (pdfPreviewUrl) {
-            window.URL.revokeObjectURL(pdfPreviewUrl);
-          }
           setPdfPreviewUrl('');
           setPdfPreviewTitle('');
         }}
@@ -1358,14 +1686,15 @@ const Dashboard: React.FC = () => {
           setTextPreviewVisible(false);
           setTextPreviewContent('');
           setTextPreviewTitle('');
+          setTextPreviewFileId(undefined);
         }}
         onCloseUnsupportedFile={() => {
           setUnsupportedFileModalVisible(false);
           setUnsupportedFileItem(null);
         }}
         onDownload={handleDownload}
-        getOriginalFilename={getOriginalFilename}
         onFileUpdated={handleFileUpdate}
+        getOriginalFilename={getOriginalFilename}
       />
     </Layout>
   );

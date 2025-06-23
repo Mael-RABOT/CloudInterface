@@ -1952,3 +1952,463 @@ body {
 }
 
 /* Custom checkbox styles for bulk selection */
+
+/* Enhanced Mobile Responsive Design */
+@media (max-width: 768px) {
+  /* General mobile optimizations */
+  body {
+    font-size: 14px;
+    line-height: 1.4;
+    overflow-x: hidden;
+  }
+
+  /* Improved touch targets */
+  .ant-btn {
+    min-height: 44px;
+    padding: 8px 16px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+
+  .ant-input {
+    min-height: 44px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+
+  .ant-select-selector {
+    min-height: 44px !important;
+    font-size: 16px !important;
+  }
+
+  /* Mobile-friendly spacing */
+  .ant-space {
+    gap: 8px !important;
+  }
+
+  .ant-card {
+    margin-bottom: 16px;
+    border-radius: 12px;
+  }
+
+  .ant-card-body {
+    padding: 16px;
+  }
+
+  /* Mobile table optimizations */
+  .ant-table {
+    font-size: 12px;
+  }
+
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    padding: 8px 4px;
+  }
+
+  /* Mobile-specific ASCII art adjustments */
+  .ascii-header {
+    font-size: 8px;
+    line-height: 1.2;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .ascii-logo {
+    font-size: 6px;
+    line-height: 1.1;
+  }
+
+  /* Mobile layout adjustments */
+  .ant-layout-sider {
+    position: fixed !important;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .ant-layout-sider.mobile-open {
+    transform: translateX(0);
+  }
+
+  .ant-layout-content {
+    margin-left: 0 !important;
+    padding: 8px;
+  }
+
+  /* Mobile navigation */
+  .mobile-nav-toggle {
+    display: block !important;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 1001;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    padding: 8px;
+    border-radius: 8px;
+  }
+
+  /* Mobile file grid */
+  .file-grid-mobile {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 8px;
+  }
+
+  .file-item-mobile {
+    background: rgba(0, 255, 0, 0.05);
+    border: 1px solid #00ff00;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .file-item-mobile .file-icon {
+    font-size: 24px;
+    color: #00ff00;
+  }
+
+  .file-item-mobile .file-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .file-item-mobile .file-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #00ff00;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .file-item-mobile .file-meta {
+    font-size: 12px;
+    color: rgba(0, 255, 0, 0.7);
+  }
+
+  /* Mobile action buttons */
+  .mobile-actions {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
+
+  .mobile-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #00ff00;
+    color: #000;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+
+  /* Mobile modal adjustments */
+  .ant-modal {
+    margin: 16px;
+    max-width: calc(100vw - 32px);
+  }
+
+  .ant-modal-content {
+    border-radius: 12px;
+  }
+
+  .ant-modal-body {
+    padding: 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  /* Mobile form adjustments */
+  .ant-form-item {
+    margin-bottom: 16px;
+  }
+
+  .ant-form-item-label > label {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  /* Mobile tabs */
+  .ant-tabs-tab {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  /* Mobile tree adjustments */
+  .ant-tree-node-content-wrapper {
+    padding: 8px 4px;
+    min-height: 44px;
+  }
+
+  .ant-tree-title {
+    font-size: 14px;
+  }
+
+  /* Mobile upload area */
+  .ant-upload-drag {
+    padding: 24px 16px;
+    border-radius: 12px;
+  }
+
+  /* Mobile status messages */
+  .status-message {
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  /* Mobile progress bars */
+  .ant-progress {
+    margin: 8px 0;
+  }
+
+  /* Mobile tooltips and popovers */
+  .ant-tooltip {
+    max-width: 280px;
+  }
+
+  .ant-popover {
+    max-width: 280px;
+  }
+
+  /* Mobile scrollbar adjustments */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 255, 0, 0.3);
+    border-radius: 2px;
+  }
+
+  /* Mobile keyboard avoidance */
+  .mobile-keyboard-avoid {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Mobile safe area support */
+  .mobile-safe-area {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Small mobile devices (up to 480px) */
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+  }
+
+  .ascii-header {
+    font-size: 6px;
+  }
+
+  .ascii-logo {
+    font-size: 4px;
+  }
+
+  .ant-btn {
+    min-height: 48px;
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+
+  .ant-input {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .file-item-mobile {
+    padding: 20px;
+  }
+
+  .file-item-mobile .file-icon {
+    font-size: 28px;
+  }
+
+  .file-item-mobile .file-name {
+    font-size: 16px;
+  }
+
+  .mobile-fab {
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+  }
+
+  .ant-modal {
+    margin: 8px;
+    max-width: calc(100vw - 16px);
+  }
+
+  .ant-modal-body {
+    padding: 12px;
+    max-height: 70vh;
+  }
+
+  /* Stack elements vertically on very small screens */
+  .mobile-stack {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .mobile-stack .ant-btn {
+    width: 100%;
+  }
+}
+
+/* Tablet optimizations (768px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .ascii-header {
+    font-size: 10px;
+  }
+
+  .ascii-logo {
+    font-size: 8px;
+  }
+
+  .ant-layout-sider {
+    width: 200px !important;
+  }
+
+  .ant-layout-content {
+    margin-left: 200px !important;
+  }
+
+  .file-grid-mobile {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Landscape mobile optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+  .ant-layout-sider {
+    width: 250px !important;
+  }
+
+  .ascii-header {
+    font-size: 10px;
+  }
+
+  .mobile-actions {
+    bottom: 10px;
+    right: 10px;
+  }
+
+  .mobile-fab {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+}
+
+/* High DPI mobile devices */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .ant-btn,
+  .ant-input,
+  .ant-select-selector {
+    border-width: 0.5px;
+  }
+}
+
+/* Mobile touch optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .ant-btn:hover {
+    transform: none;
+  }
+
+  .ant-btn:active {
+    transform: scale(0.98);
+  }
+
+  .file-item-mobile:active {
+    transform: scale(0.98);
+    background: rgba(0, 255, 0, 0.1);
+  }
+
+  /* Increase touch targets */
+  .ant-checkbox-wrapper {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .ant-radio-wrapper {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .ant-switch {
+    min-width: 44px;
+    min-height: 24px;
+  }
+}
+
+/* Mobile accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .crt-screen {
+    animation: none;
+  }
+
+  .ant-btn,
+  .file-item-mobile {
+    transition: none;
+  }
+}
+
+/* Dark mode mobile optimizations */
+@media (prefers-color-scheme: dark) {
+  .mobile-fab {
+    background: #00ff00;
+    color: #000;
+  }
+
+  .file-item-mobile {
+    background: rgba(0, 255, 0, 0.1);
+    border-color: #00ff00;
+  }
+}
+
+/* Mobile performance optimizations */
+@media (max-width: 768px) {
+  /* Reduce animation complexity on mobile */
+  .crt-screen {
+    animation-duration: 0.5s;
+  }
+
+  /* Optimize for mobile GPUs */
+  .ant-btn,
+  .file-item-mobile,
+  .ant-card {
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+
+  /* Reduce box-shadow complexity on mobile */
+  .ant-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-fab {
+    box-shadow: 0 2px 8px rgba(0, 255, 0, 0.2);
+  }
+}

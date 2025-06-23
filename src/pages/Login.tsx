@@ -20,7 +20,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { themeConstants } from '../theme';
+import { colors, spacing, borderRadius, shadows } from '../theme';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -33,7 +33,7 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       const response = await authAPI.login(values.username, values.password);
-      await login(response.token, values.username);
+      await login(response.token, response.user);
       message.success('Welcome back! You have successfully logged in.');
       navigate('/dashboard', { replace: true });
     } catch (error: any) {
@@ -47,36 +47,36 @@ const Login: React.FC = () => {
     <div
       style={{
         minHeight: '100vh',
-        background: `linear-gradient(135deg, ${themeConstants.colors.primary[50]} 0%, ${themeConstants.colors.primary[100]} 100%)`,
+        background: `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.primary[100]} 100%)`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: themeConstants.spacing.lg,
+        padding: spacing.lg,
       }}
     >
       <Row justify="center" align="middle" style={{ width: '100%', maxWidth: 1200 }}>
-        <Col xs={24} lg={12} style={{ padding: themeConstants.spacing.lg }}>
+        <Col xs={24} lg={12} style={{ padding: spacing.lg }}>
           {/* Left side - Branding */}
-          <div style={{ textAlign: 'center', marginBottom: themeConstants.spacing.xl }}>
+          <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
             <Space direction="vertical" size="large">
               <div>
                 <CloudOutlined
                   style={{
                     fontSize: 64,
-                    color: themeConstants.colors.primary[600],
-                    marginBottom: themeConstants.spacing.md,
+                    color: colors.primary[600],
+                    marginBottom: spacing.md,
                   }}
                 />
-                <Title level={1} style={{ margin: 0, color: themeConstants.colors.text.primary }}>
+                <Title level={1} style={{ margin: 0, color: colors.text.primary }}>
                   Cloud Interface
                 </Title>
-                <Title level={3} style={{ margin: 0, color: themeConstants.colors.text.secondary, fontWeight: 400 }}>
+                <Title level={3} style={{ margin: 0, color: colors.text.secondary, fontWeight: 400 }}>
                   Professional File Management
                 </Title>
               </div>
 
               <div style={{ maxWidth: 400, margin: '0 auto' }}>
-                <Paragraph style={{ fontSize: 16, color: themeConstants.colors.text.secondary }}>
+                <Paragraph style={{ fontSize: 16, color: colors.text.secondary }}>
                   Secure, fast, and intuitive cloud storage solution for teams and individuals.
                   Access your files from anywhere, collaborate seamlessly, and stay organized.
                 </Paragraph>
@@ -86,7 +86,7 @@ const Login: React.FC = () => {
               <Row gutter={[24, 16]} justify="center">
                 <Col span={8}>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 24, color: themeConstants.colors.primary[600], marginBottom: 8 }}>
+                    <div style={{ fontSize: 24, color: colors.primary[600], marginBottom: 8 }}>
                       🔒
                     </div>
                     <Text strong>Secure</Text>
@@ -94,7 +94,7 @@ const Login: React.FC = () => {
                 </Col>
                 <Col span={8}>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 24, color: themeConstants.colors.success, marginBottom: 8 }}>
+                    <div style={{ fontSize: 24, color: colors.success, marginBottom: 8 }}>
                       ⚡
                     </div>
                     <Text strong>Fast</Text>
@@ -102,7 +102,7 @@ const Login: React.FC = () => {
                 </Col>
                 <Col span={8}>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 24, color: themeConstants.colors.info, marginBottom: 8 }}>
+                    <div style={{ fontSize: 24, color: colors.info, marginBottom: 8 }}>
                       🤝
                     </div>
                     <Text strong>Collaborative</Text>
@@ -113,17 +113,17 @@ const Login: React.FC = () => {
           </div>
         </Col>
 
-        <Col xs={24} lg={12} style={{ padding: themeConstants.spacing.lg }}>
+        <Col xs={24} lg={12} style={{ padding: spacing.lg }}>
           {/* Right side - Login Form */}
           <Card
             style={{
               maxWidth: 400,
               margin: '0 auto',
-              borderRadius: themeConstants.borderRadius.lg,
-              boxShadow: themeConstants.shadows.xl,
+              borderRadius: borderRadius.lg,
+              boxShadow: shadows.xl,
             }}
           >
-            <div style={{ textAlign: 'center', marginBottom: themeConstants.spacing.xl }}>
+            <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
               <Title level={2} style={{ margin: 0 }}>
                 Sign In
               </Title>
@@ -147,7 +147,7 @@ const Login: React.FC = () => {
                 ]}
               >
                 <Input
-                  prefix={<UserOutlined style={{ color: themeConstants.colors.text.tertiary }} />}
+                  prefix={<UserOutlined style={{ color: colors.text.tertiary }} />}
                   placeholder="Username"
                   style={{ height: 48 }}
                 />
@@ -161,7 +161,7 @@ const Login: React.FC = () => {
                 ]}
               >
                 <Input.Password
-                  prefix={<LockOutlined style={{ color: themeConstants.colors.text.tertiary }} />}
+                  prefix={<LockOutlined style={{ color: colors.text.tertiary }} />}
                   placeholder="Password"
                   iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
                   style={{ height: 48 }}
@@ -181,7 +181,7 @@ const Login: React.FC = () => {
               </Form.Item>
             </Form>
 
-            <div style={{ textAlign: 'center', marginTop: themeConstants.spacing.lg }}>
+            <div style={{ textAlign: 'center', marginTop: spacing.lg }}>
               <Text type="secondary" style={{ fontSize: 12 }}>
                 Need an account? Please contact your administrator.
               </Text>

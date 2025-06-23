@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, Input, theme, Tooltip, Space, Divider, Typography } from 'antd';
+import { Button, Input, theme, Tooltip, Space } from 'antd';
 import {
   BoldOutlined,
   ItalicOutlined,
@@ -14,20 +14,20 @@ import {
   HighlightOutlined,
   CodeOutlined,
   LinkOutlined,
-  FileTextOutlined
 } from '@ant-design/icons';
+import { useDeviceDetection } from '../utils/deviceDetection';
 
 const { TextArea } = Input;
-const { Text: TypographyText } = Typography;
 
 interface EditorProps {
-  initialContent?: string;
-  title?: string;
-  onSave?: (content: string, title: string) => void;
-  onClose?: () => void;
+  content?: string;
+  filename?: string;
+  fileId?: number;
+  onSave?: (fileId: number, content: string, filename: string) => void;
   readOnly?: boolean;
   placeholder?: string;
   autoFocus?: boolean;
+  style?: React.CSSProperties;
 }
 
 interface EditorState {
@@ -40,26 +40,40 @@ interface EditorState {
 }
 
 const Editor: React.FC<EditorProps> = ({
-  initialContent = '',
-  title: initialTitle = 'Untitled Document',
+  content = '',
+  filename = 'Untitled Document',
+  fileId,
   onSave,
-  onClose,
   readOnly = false,
   placeholder = 'Start typing your document...',
-  autoFocus = true
+  autoFocus = true,
+  style
 }) => {
   const { token } = theme.useToken();
+  const { isMobile } = useDeviceDetection();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [state, setState] = useState<EditorState>({
-    content: initialContent,
-    title: initialTitle,
+    content: content,
+    title: filename,
     selectionStart: 0,
     selectionEnd: 0,
-    history: [initialContent],
+    history: [content],
     historyIndex: 0
   });
 
   const [isModified, setIsModified] = useState(false);
+
+  // Update content when prop changes
+  useEffect(() => {
+    setState(prev => ({
+      ...prev,
+      content: content,
+      title: filename,
+      history: [content],
+      historyIndex: 0
+    }));
+    setIsModified(false);
+  }, [content, filename]);
 
   // Update selection state when textarea changes
   const updateSelection = () => {
@@ -198,11 +212,9 @@ const Editor: React.FC<EditorProps> = ({
 
   // Save function
   const handleSave = () => {
-    if (onSave) {
-      onSave(state.content, state.title);
+    if (onSave && fileId) {
+      onSave(fileId, state.content, state.title);
       setIsModified(false);
-    } else {
-      console.warn('No onSave handler provided');
     }
   };
 
@@ -252,157 +264,142 @@ const Editor: React.FC<EditorProps> = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [state]);
+  }, [state.content, state.historyIndex]);
 
-  // Auto-focus on mount
+  // Auto-focus
   useEffect(() => {
     if (autoFocus && textareaRef.current) {
       textareaRef.current.focus();
     }
   }, [autoFocus]);
 
-  // Update content when initialContent changes
-  useEffect(() => {
-    setState(prev => ({
-      ...prev,
-      content: initialContent,
-      history: [initialContent],
-      historyIndex: 0
-    }));
-    setIsModified(false);
-  }, [initialContent]);
+  // Mobile toolbar items
+  const mobileToolbarItems = [
+    { key: 'bold', icon: <BoldOutlined />, tooltip: 'Bold (Ctrl+B)', format: 'bold' },
+    { key: 'italic', icon: <ItalicOutlined />, tooltip: 'Italic (Ctrl+I)', format: 'italic' },
+    { key: 'underline', icon: <UnderlineOutlined />, tooltip: 'Underline (Ctrl+U)', format: 'underline' },
+    { key: 'code', icon: <CodeOutlined />, tooltip: 'Code', format: 'code' },
+  ];
 
-  const canUndo = state.historyIndex > 0;
-  const canRedo = state.historyIndex < state.history.length - 1;
+  // Desktop toolbar items
+  const desktopToolbarItems = [
+    ...mobileToolbarItems,
+    { key: 'strikethrough', icon: <StrikethroughOutlined />, tooltip: 'Strikethrough', format: 'strikethrough' },
+    { key: 'highlight', icon: <HighlightOutlined />, tooltip: 'Highlight', format: 'highlight' },
+    { key: 'link', icon: <LinkOutlined />, tooltip: 'Link', format: 'link' },
+    { key: 'list-ordered', icon: <OrderedListOutlined />, tooltip: 'Ordered List', format: 'list-ordered' },
+    { key: 'list-unordered', icon: <UnorderedListOutlined />, tooltip: 'Unordered List', format: 'list-unordered' },
+  ];
+
+  const toolbarItems = isMobile ? mobileToolbarItems : desktopToolbarItems;
 
   return (
     <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
       background: token.colorBgContainer,
       border: `1px solid ${token.colorBorder}`,
       borderRadius: token.borderRadius,
-      overflow: 'hidden',
       fontFamily: token.fontFamily,
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column'
+      ...style
     }}>
       {/* Header */}
       <div style={{
-        padding: `${token.paddingMD}px ${token.paddingLG}px`,
+        padding: isMobile ? token.paddingSM : token.paddingMD,
         borderBottom: `1px solid ${token.colorBorder}`,
         background: token.colorBgElevated,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        flexWrap: isMobile ? 'wrap' : 'nowrap',
+        gap: isMobile ? token.marginXS : token.marginSM
       }}>
-        <div style={{ flex: 1, marginRight: token.marginMD }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <Input
             value={state.title}
             onChange={handleTitleChange}
             placeholder="Document title..."
             style={{
               fontFamily: token.fontFamily,
-              fontSize: token.fontSizeLG,
               fontWeight: 'bold',
+              fontSize: isMobile ? '14px' : '16px',
               border: 'none',
               background: 'transparent',
-              padding: 0,
-              color: token.colorText
+              padding: 0
             }}
-            disabled={readOnly}
+            readOnly={readOnly}
           />
         </div>
 
-        <Space>
-          {isModified && (
-            <TypographyText style={{
-              color: token.colorWarning,
-              fontSize: token.fontSizeSM,
-              fontFamily: token.fontFamily
-            }}>
-              MODIFIED
-            </TypographyText>
+        <Space size={isMobile ? 'small' : 'middle'} wrap={isMobile}>
+          {!readOnly && (
+            <>
+              <Button
+                size={isMobile ? "small" : "middle"}
+                icon={<UndoOutlined />}
+                onClick={undo}
+                disabled={state.historyIndex === 0}
+                style={{
+                  fontFamily: token.fontFamily,
+                  minHeight: isMobile ? '32px' : 'auto',
+                  backgroundColor: '#000000',
+                  borderColor: '#00ff00',
+                  color: '#00ff00',
+                  borderWidth: '1px',
+                  borderStyle: 'solid'
+                }}
+              />
+              <Button
+                size={isMobile ? "small" : "middle"}
+                icon={<RedoOutlined />}
+                onClick={redo}
+                disabled={state.historyIndex === state.history.length - 1}
+                style={{
+                  fontFamily: token.fontFamily,
+                  minHeight: isMobile ? '32px' : 'auto',
+                  backgroundColor: '#000000',
+                  borderColor: '#00ff00',
+                  color: '#00ff00',
+                  borderWidth: '1px',
+                  borderStyle: 'solid'
+                }}
+              />
+              <Button
+                size={isMobile ? "small" : "middle"}
+                icon={<ClearOutlined />}
+                onClick={handleClear}
+                style={{
+                  fontFamily: token.fontFamily,
+                  minHeight: isMobile ? '32px' : 'auto',
+                  backgroundColor: '#000000',
+                  borderColor: '#00ff00',
+                  color: '#00ff00',
+                  borderWidth: '1px',
+                  borderStyle: 'solid'
+                }}
+              />
+            </>
           )}
-
-          <Button
-            size="small"
-            icon={<UndoOutlined />}
-            onClick={undo}
-            disabled={!canUndo || readOnly}
-            style={{
-              fontFamily: token.fontFamily,
-              fontSize: token.fontSizeSM,
-              background: token.colorBgContainer,
-              borderColor: token.colorBorder,
-              color: token.colorText
-            }}
-          >
-            UNDO
-          </Button>
-
-          <Button
-            size="small"
-            icon={<RedoOutlined />}
-            onClick={redo}
-            disabled={!canRedo || readOnly}
-            style={{
-              fontFamily: token.fontFamily,
-              fontSize: token.fontSizeSM,
-              background: token.colorBgContainer,
-              borderColor: token.colorBorder,
-              color: token.colorText
-            }}
-          >
-            REDO
-          </Button>
-
-          <Button
-            size="small"
-            icon={<ClearOutlined />}
-            onClick={handleClear}
-            disabled={readOnly}
-            style={{
-              fontFamily: token.fontFamily,
-              fontSize: token.fontSizeSM,
-              background: token.colorBgContainer,
-              borderColor: token.colorBorder,
-              color: token.colorText
-            }}
-          >
-            CLEAR
-          </Button>
-
-          {onSave && (
+          {onSave && fileId && (
             <Button
               type="primary"
+              size={isMobile ? "small" : "middle"}
               icon={<SaveOutlined />}
               onClick={handleSave}
-              disabled={readOnly}
+              disabled={!isModified}
               style={{
                 fontFamily: token.fontFamily,
                 fontWeight: 'bold',
-                fontSize: token.fontSizeSM,
-                background: token.colorPrimary,
-                borderColor: token.colorPrimary
+                minHeight: isMobile ? '32px' : 'auto',
+                backgroundColor: '#000000',
+                borderColor: '#00ff00',
+                color: '#00ff00',
+                borderWidth: '1px',
+                borderStyle: 'solid'
               }}
             >
-              SAVE
-            </Button>
-          )}
-
-          {onClose && (
-            <Button
-              size="small"
-              onClick={onClose}
-              style={{
-                fontFamily: token.fontFamily,
-                fontSize: token.fontSizeSM,
-                background: token.colorBgContainer,
-                borderColor: token.colorBorder,
-                color: token.colorText
-              }}
-            >
-              CLOSE
+              {isMobile ? 'SAVE' : 'SAVE'}
             </Button>
           )}
         </Space>
@@ -411,230 +408,35 @@ const Editor: React.FC<EditorProps> = ({
       {/* Toolbar */}
       {!readOnly && (
         <div style={{
-          padding: `${token.paddingSM}px ${token.paddingLG}px`,
+          padding: isMobile ? token.paddingXS : token.paddingSM,
           borderBottom: `1px solid ${token.colorBorder}`,
           background: token.colorBgElevated,
           display: 'flex',
           alignItems: 'center',
-          gap: token.marginXS,
+          gap: isMobile ? '4px' : token.marginXS,
           flexWrap: 'wrap'
         }}>
-          <Space size="small">
-            <Tooltip title="Bold (Ctrl+B)">
+          {toolbarItems.map(item => (
+            <Tooltip key={item.key} title={item.tooltip}>
               <Button
-                size="small"
-                icon={<BoldOutlined />}
-                onClick={() => formatText('bold')}
+                size={isMobile ? "small" : "middle"}
+                type="text"
+                icon={item.icon}
+                onClick={() => formatText(item.format)}
                 style={{
                   fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
+                  minWidth: isMobile ? '32px' : 'auto',
+                  minHeight: isMobile ? '32px' : 'auto',
+                  padding: isMobile ? '4px' : undefined
                 }}
               />
             </Tooltip>
-
-            <Tooltip title="Italic (Ctrl+I)">
-              <Button
-                size="small"
-                icon={<ItalicOutlined />}
-                onClick={() => formatText('italic')}
-                style={{
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
-                }}
-              />
-            </Tooltip>
-
-            <Tooltip title="Underline (Ctrl+U)">
-              <Button
-                size="small"
-                icon={<UnderlineOutlined />}
-                onClick={() => formatText('underline')}
-                style={{
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
-                }}
-              />
-            </Tooltip>
-
-            <Tooltip title="Strikethrough">
-              <Button
-                size="small"
-                icon={<StrikethroughOutlined />}
-                onClick={() => formatText('strikethrough')}
-                style={{
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
-                }}
-              />
-            </Tooltip>
-
-            <Tooltip title="Code">
-              <Button
-                size="small"
-                icon={<CodeOutlined />}
-                onClick={() => formatText('code')}
-                style={{
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
-                }}
-              />
-            </Tooltip>
-
-            <Tooltip title="Highlight">
-              <Button
-                size="small"
-                icon={<HighlightOutlined />}
-                onClick={() => formatText('highlight')}
-                style={{
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
-                }}
-              />
-            </Tooltip>
-          </Space>
-
-          <Divider type="vertical" style={{ margin: '0 8px' }} />
-
-          <Space size="small">
-            <Tooltip title="Heading 1">
-              <Button
-                size="small"
-                onClick={() => formatText('heading1')}
-                style={{
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  fontWeight: 'bold',
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
-                }}
-              >
-                H1
-              </Button>
-            </Tooltip>
-
-            <Tooltip title="Heading 2">
-              <Button
-                size="small"
-                onClick={() => formatText('heading2')}
-                style={{
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  fontWeight: 'bold',
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
-                }}
-              >
-                H2
-              </Button>
-            </Tooltip>
-
-            <Tooltip title="Heading 3">
-              <Button
-                size="small"
-                onClick={() => formatText('heading3')}
-                style={{
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  fontWeight: 'bold',
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
-                }}
-              >
-                H3
-              </Button>
-            </Tooltip>
-
-            <Tooltip title="Quote">
-              <Button
-                size="small"
-                onClick={() => formatText('quote')}
-                style={{
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
-                }}
-              >
-                QUOTE
-              </Button>
-            </Tooltip>
-          </Space>
-
-          <Divider type="vertical" style={{ margin: '0 8px' }} />
-
-          <Space size="small">
-            <Tooltip title="Ordered List">
-              <Button
-                size="small"
-                icon={<OrderedListOutlined />}
-                onClick={() => formatText('list-ordered')}
-                style={{
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
-                }}
-              />
-            </Tooltip>
-
-            <Tooltip title="Unordered List">
-              <Button
-                size="small"
-                icon={<UnorderedListOutlined />}
-                onClick={() => formatText('list-unordered')}
-                style={{
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
-                }}
-              />
-            </Tooltip>
-
-            <Tooltip title="Link">
-              <Button
-                size="small"
-                icon={<LinkOutlined />}
-                onClick={() => formatText('link')}
-                style={{
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM,
-                  background: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                  color: token.colorText
-                }}
-              />
-            </Tooltip>
-          </Space>
+          ))}
         </div>
       )}
 
-      {/* Editor Area */}
-      <div style={{ flex: 1, padding: token.paddingLG }}>
+      {/* Editor */}
+      <div style={{ flex: 1, padding: isMobile ? token.paddingSM : token.paddingMD }}>
         <TextArea
           ref={textareaRef}
           value={state.content}
@@ -642,53 +444,39 @@ const Editor: React.FC<EditorProps> = ({
           onSelect={updateSelection}
           placeholder={placeholder}
           readOnly={readOnly}
-          autoSize={{ minRows: 20, maxRows: 50 }}
+          autoSize={{ minRows: 10, maxRows: 50 }}
           style={{
-            fontFamily: 'monospace',
-            fontSize: token.fontSizeSM,
-            lineHeight: 1.6,
+            fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
+            fontSize: isMobile ? '14px' : '16px',
+            lineHeight: 1.5,
+            background: token.colorBgContainer,
             border: `1px solid ${token.colorBorder}`,
             borderRadius: token.borderRadius,
-            background: token.colorBgContainer,
-            color: token.colorText,
             resize: 'none',
             height: '100%',
-            minHeight: '400px'
+            minHeight: isMobile ? '300px' : '400px'
           }}
         />
       </div>
 
       {/* Status Bar */}
       <div style={{
-        padding: `${token.paddingSM}px ${token.paddingLG}px`,
+        padding: isMobile ? `${token.paddingXS}px ${token.paddingSM}px` : `${token.paddingSM}px ${token.paddingMD}px`,
         borderTop: `1px solid ${token.colorBorder}`,
         background: token.colorBgElevated,
         display: 'flex',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        fontSize: token.fontSizeSM,
+        justifyContent: 'space-between',
+        fontSize: isMobile ? '11px' : '12px',
         color: token.colorTextSecondary,
         fontFamily: token.fontFamily
       }}>
         <div>
-          <FileTextOutlined style={{ marginRight: token.marginXS }} />
-          {state.content.length} characters
-          {state.content.split('\n').length > 1 && (
-            <span style={{ marginLeft: token.marginMD }}>
-              {state.content.split('\n').length} lines
-            </span>
-          )}
+          {isModified && <span style={{ color: token.colorWarning }}>● Modified</span>}
+          {!isModified && <span>Saved</span>}
         </div>
-
         <div>
-          {state.selectionStart !== state.selectionEnd && (
-            <span style={{ marginRight: token.marginMD }}>
-              Selected: {state.selectionEnd - state.selectionStart} characters
-            </span>
-          )}
-          <span>
-            Ctrl+S: Save | Ctrl+Z: Undo | Ctrl+Shift+Z: Redo
-          </span>
+          {state.content.length} characters
         </div>
       </div>
     </div>

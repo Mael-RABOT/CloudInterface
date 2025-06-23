@@ -42,6 +42,7 @@ export interface Item {
   filename: string;
   contentType: string;
   createdAt: string;
+  size?: number;
 }
 
 // Interface for login response

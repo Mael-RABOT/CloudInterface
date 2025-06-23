@@ -7,7 +7,6 @@ import {
   Input,
   Select,
   Dropdown,
-  Menu,
   Modal,
   Form,
   Upload,
@@ -21,14 +20,12 @@ import {
   Divider,
   Pagination,
   Checkbox,
-  Popconfirm,
   List,
   Spin,
 } from 'antd';
 import {
   SearchOutlined,
   UploadOutlined,
-  FolderOutlined,
   FileOutlined,
   MoreOutlined,
   DownloadOutlined,
@@ -36,36 +33,31 @@ import {
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
-  StarOutlined,
-  StarFilled,
   ReloadOutlined,
   SortAscendingOutlined,
   AppstoreOutlined,
   UnorderedListOutlined,
   CloudUploadOutlined,
-  FolderAddOutlined,
   CopyOutlined,
-  InfoCircleOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { itemsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { themeConstants } from '../theme';
+import { colors, spacing } from '../theme';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 const { Option } = Select;
-const { Dragger } = Upload;
 
 // File type configurations
 const fileTypes = {
-  PDF: { icon: <FileOutlined style={{ color: themeConstants.colors.error }} />, color: themeConstants.colors.error },
-  DOCX: { icon: <FileOutlined style={{ color: themeConstants.colors.primary[600] }} />, color: themeConstants.colors.primary[600] },
-  EXCEL: { icon: <FileOutlined style={{ color: themeConstants.colors.success }} />, color: themeConstants.colors.success },
-  POWERPOINT: { icon: <FileOutlined style={{ color: themeConstants.colors.error }} />, color: themeConstants.colors.error },
-  ZIP: { icon: <FileOutlined style={{ color: themeConstants.colors.info }} />, color: themeConstants.colors.info },
-  TEXT: { icon: <FileOutlined style={{ color: themeConstants.colors.neutral[500] }} />, color: themeConstants.colors.neutral[500] },
-  FILE: { icon: <FileOutlined style={{ color: themeConstants.colors.neutral[500] }} />, color: themeConstants.colors.neutral[500] },
+  PDF: { icon: <FileOutlined style={{ color: colors.error }} />, color: colors.error },
+  DOCX: { icon: <FileOutlined style={{ color: colors.primary[600] }} />, color: colors.primary[600] },
+  EXCEL: { icon: <FileOutlined style={{ color: colors.success }} />, color: colors.success },
+  POWERPOINT: { icon: <FileOutlined style={{ color: colors.error }} />, color: colors.error },
+  ZIP: { icon: <FileOutlined style={{ color: colors.info }} />, color: colors.info },
+  TEXT: { icon: <FileOutlined style={{ color: colors.neutral[500] }} />, color: colors.neutral[500] },
+  FILE: { icon: <FileOutlined style={{ color: colors.neutral[500] }} />, color: colors.neutral[500] },
 };
 
 const FileManager: React.FC = () => {
@@ -76,7 +68,6 @@ const FileManager: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [sortOrder, setSortOrder] = useState<'ascend' | 'descend'>('descend');
   const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
-  const [isNewFolderModalVisible, setIsNewFolderModalVisible] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(true);
@@ -236,7 +227,7 @@ const FileManager: React.FC = () => {
       title: 'Type',
       dataIndex: 'contentType',
       key: 'contentType',
-      render: (contentType: string, record: any) => (
+      render: (record: any) => (
         <Text>{getFileType(record.filename)}</Text>
       ),
     },
@@ -345,7 +336,7 @@ const FileManager: React.FC = () => {
             size="small"
             style={{
               textAlign: 'center',
-              border: selectedFiles.includes(item.id) ? `2px solid ${themeConstants.colors.primary[600]}` : undefined,
+              border: selectedFiles.includes(item.id) ? `2px solid ${colors.primary[600]}` : undefined,
             }}
             onClick={() => {
               if (selectedFiles.includes(item.id)) {
@@ -425,7 +416,7 @@ const FileManager: React.FC = () => {
   return (
     <div>
       {/* Page Header */}
-      <div style={{ marginBottom: themeConstants.spacing.xl }}>
+      <div style={{ marginBottom: spacing.xl }}>
         <Title level={2} style={{ margin: 0 }}>
           File Manager
         </Title>
@@ -435,7 +426,7 @@ const FileManager: React.FC = () => {
       </div>
 
       {/* Toolbar */}
-      <Card style={{ marginBottom: themeConstants.spacing.lg }}>
+      <Card style={{ marginBottom: spacing.lg }}>
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={6}>
             <Search
@@ -541,7 +532,7 @@ const FileManager: React.FC = () => {
         )}
 
         {/* Pagination */}
-        <div style={{ marginTop: themeConstants.spacing.lg, textAlign: 'right' }}>
+        <div style={{ marginTop: spacing.lg, textAlign: 'right' }}>
           <Pagination
             current={currentPage}
             total={filteredFiles.length}
@@ -592,7 +583,7 @@ const FileManager: React.FC = () => {
               maxCount={1}
             >
               <p className="ant-upload-drag-icon">
-                <CloudUploadOutlined style={{ fontSize: 48, color: themeConstants.colors.primary[600] }} />
+                <CloudUploadOutlined style={{ fontSize: 48, color: colors.primary[600] }} />
               </p>
               <p className="ant-upload-text">Click or drag file to this area to upload</p>
               <p className="ant-upload-hint">

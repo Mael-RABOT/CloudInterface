@@ -217,7 +217,6 @@ export const theme: ThemeConfig = {
     motionDurationSlow: '0.35s',
     motionEaseInOut: 'cubic-bezier(0.645, 0.045, 0.355, 1)',
     motionEaseOut: 'cubic-bezier(0.215, 0.61, 0.355, 1)',
-    motionEaseIn: 'cubic-bezier(0.55, 0.055, 0.675, 0.19)',
 
     // Wireframe
     wireframe: false,
@@ -246,9 +245,7 @@ export const theme: ThemeConfig = {
       primaryColor: colors.text.inverse,
       defaultColor: colors.text.primary,
       dangerColor: colors.text.primary,
-      primaryBorderColor: colors.primary[500],
       defaultBorderColor: colors.border.medium,
-      dangerBorderColor: colors.error,
       algorithm: true,
     },
 
@@ -275,7 +272,6 @@ export const theme: ThemeConfig = {
       colorBgContainer: colors.background.primary,
       colorText: colors.text.primary,
       colorTextHeading: colors.text.primary,
-      borderColor: colors.border.light,
       algorithm: true,
     },
 
@@ -286,7 +282,6 @@ export const theme: ThemeConfig = {
       colorBgContainer: colors.background.primary,
       colorText: colors.text.primary,
       colorTextHeading: colors.text.primary,
-      borderColor: colors.border.medium,
       algorithm: true,
     },
 
@@ -398,24 +393,6 @@ export const theme: ThemeConfig = {
       colorBorder: colors.border.medium,
       colorText: colors.text.primary,
       colorTextPlaceholder: colors.text.placeholder,
-      algorithm: true,
-    },
-
-    // DatePicker components
-    DatePicker: {
-      borderRadius: borderRadius.base,
-      colorBgContainer: colors.background.secondary,
-      colorBorder: colors.border.medium,
-      colorText: colors.text.primary,
-      algorithm: true,
-    },
-
-    // TimePicker components
-    TimePicker: {
-      borderRadius: borderRadius.base,
-      colorBgContainer: colors.background.secondary,
-      colorBorder: colors.border.medium,
-      colorText: colors.text.primary,
       algorithm: true,
     },
 
@@ -562,53 +539,6 @@ export const theme: ThemeConfig = {
     Timeline: {
       colorText: colors.text.primary,
       colorTextDescription: colors.text.secondary,
-      algorithm: true,
-    },
-
-    // Transfer components
-    Transfer: {
-      colorBgContainer: colors.background.primary,
-      colorBorder: colors.border.medium,
-      colorText: colors.text.primary,
-      algorithm: true,
-    },
-
-    // Cascader components
-    Cascader: {
-      colorBgContainer: colors.background.secondary,
-      colorBorder: colors.border.medium,
-      colorText: colors.text.primary,
-      algorithm: true,
-    },
-
-    // Mentions components
-    Mentions: {
-      colorBgContainer: colors.background.secondary,
-      colorBorder: colors.border.medium,
-      colorText: colors.text.primary,
-      algorithm: true,
-    },
-
-    // AutoComplete components
-    AutoComplete: {
-      colorBgContainer: colors.background.secondary,
-      colorBorder: colors.border.medium,
-      colorText: colors.text.primary,
-      algorithm: true,
-    },
-
-    // InputNumber components
-    InputNumber: {
-      colorBgContainer: colors.background.secondary,
-      colorBorder: colors.border.medium,
-      colorText: colors.text.primary,
-      algorithm: true,
-    },
-
-    // Slider components
-    Slider: {
-      colorPrimary: colors.primary[500],
-      colorPrimaryBorder: colors.primary[500],
       algorithm: true,
     },
   },

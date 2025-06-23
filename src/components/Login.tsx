@@ -30,7 +30,7 @@ import { useAuth } from '../contexts/AuthContext';
 const REGISTER_DISABLED = true;
 
 const { Text, Title } = Typography;
-const { Header, Content } = Layout;
+const { Content } = Layout;
 
 // Enhanced ASCII Art Logo with animation
 const ASCII_LOGO = `
@@ -49,12 +49,31 @@ const ASCII_LOGO = `
 ╚════════════════════════════════════════════════════╝
 `;
 
+// Simplified ASCII Logo for mobile
+const ASCII_LOGO_MOBILE = `
+╔════════════════════════════════════════════════════╗
+║                                                    ║
+║      ██████╗██╗      ██████╗ ██╗   ██╗██████╗      ║
+║     ██╔════╝██║     ██╔═══██╗██║   ██║██╔══██╗     ║
+║     ██║     ██║     ██║   ██║██║   ██║██║  ██║     ║
+║     ██║     ██║     ██║   ██║██║   ██║██║  ██║     ║
+║     ╚██████╗███████╗╚██████╔╝╚██████╔╝██████╔╝     ║
+║      ╚═════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝      ║
+║                                                    ║
+║                CLOUD INTERFACE                     ║
+║                                                    ║
+╚════════════════════════════════════════════════════╝
+`;
+
 const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
   const { login } = useAuth();
   const navigate = useNavigate();
   const { token } = theme.useToken();
+
+  // Check if screen is mobile
+  const isMobile = window.innerWidth <= 768;
 
   const onLogin = async (values: { username: string; password: string }) => {
     setLoading(true);
@@ -136,8 +155,8 @@ const Login: React.FC = () => {
           onFinish={onLogin}
           autoComplete="off"
           layout="vertical"
-          size="large"
-          style={{ marginTop: token.marginLG }}
+          size={isMobile ? "middle" : "large"}
+          style={{ marginTop: isMobile ? token.marginMD : token.marginLG }}
         >
           <Form.Item
             name="username"
@@ -146,7 +165,7 @@ const Login: React.FC = () => {
             <Input
               prefix={<UserOutlined style={{ color: token.colorTextSecondary }} />}
               placeholder="ENTER USERNAME"
-              size="large"
+              size={isMobile ? "middle" : "large"}
               style={{
                 fontFamily: token.fontFamily,
                 background: token.colorBgContainer,
@@ -163,7 +182,7 @@ const Login: React.FC = () => {
             <Input.Password
               prefix={<LockOutlined style={{ color: token.colorTextSecondary }} />}
               placeholder="ENTER PASSWORD"
-              size="large"
+              size={isMobile ? "middle" : "large"}
               style={{
                 fontFamily: token.fontFamily,
                 background: token.colorBgContainer,
@@ -173,19 +192,19 @@ const Login: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item style={{ marginTop: token.marginXL }}>
+          <Form.Item style={{ marginTop: isMobile ? token.marginLG : token.marginXL }}>
             <Button
               type="primary"
               htmlType="submit"
               loading={loading}
-              size="large"
+              size={isMobile ? "middle" : "large"}
               block
               icon={<LoginOutlined />}
               style={{
                 fontFamily: token.fontFamily,
                 fontWeight: 'bold',
-                height: token.controlHeightLG,
-                fontSize: token.fontSizeLG,
+                height: isMobile ? token.controlHeight : token.controlHeightLG,
+                fontSize: isMobile ? token.fontSize : token.fontSizeLG,
                 boxShadow: token.boxShadow
               }}
             >
@@ -211,8 +230,8 @@ const Login: React.FC = () => {
           onFinish={onRegister}
           autoComplete="off"
           layout="vertical"
-          size="large"
-          style={{ marginTop: token.marginLG }}
+          size={isMobile ? "middle" : "large"}
+          style={{ marginTop: isMobile ? token.marginMD : token.marginLG }}
         >
           <Form.Item
             name="username"
@@ -224,7 +243,7 @@ const Login: React.FC = () => {
             <Input
               prefix={<UserOutlined style={{ color: token.colorTextSecondary }} />}
               placeholder="ENTER USERNAME"
-              size="large"
+              size={isMobile ? "middle" : "large"}
               style={{
                 fontFamily: token.fontFamily,
                 background: token.colorBgContainer,
@@ -244,7 +263,7 @@ const Login: React.FC = () => {
             <Input
               prefix={<MailOutlined style={{ color: token.colorTextSecondary }} />}
               placeholder="ENTER EMAIL"
-              size="large"
+              size={isMobile ? "middle" : "large"}
               style={{
                 fontFamily: token.fontFamily,
                 background: token.colorBgContainer,
@@ -264,7 +283,7 @@ const Login: React.FC = () => {
             <Input.Password
               prefix={<LockOutlined style={{ color: token.colorTextSecondary }} />}
               placeholder="ENTER PASSWORD"
-              size="large"
+              size={isMobile ? "middle" : "large"}
               style={{
                 fontFamily: token.fontFamily,
                 background: token.colorBgContainer,
@@ -274,19 +293,19 @@ const Login: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item style={{ marginTop: token.marginXL }}>
+          <Form.Item style={{ marginTop: isMobile ? token.marginLG : token.marginXL }}>
             <Button
               type="primary"
               htmlType="submit"
               loading={loading}
-              size="large"
+              size={isMobile ? "middle" : "large"}
               block
               icon={<UserOutlined />}
               style={{
                 fontFamily: token.fontFamily,
                 fontWeight: 'bold',
-                height: token.controlHeightLG,
-                fontSize: token.fontSizeLG,
+                height: isMobile ? token.controlHeight : token.controlHeightLG,
+                fontSize: isMobile ? token.fontSize : token.fontSizeLG,
                 boxShadow: token.boxShadow
               }}
             >
@@ -305,57 +324,70 @@ const Login: React.FC = () => {
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Animated background elements */}
-      <div className="login-background-effects">
-        <div className="scanlines"></div>
-        <div className="glow-particles"></div>
-      </div>
+      {/* Animated background elements - only on desktop */}
+      {!isMobile && (
+        <div className="login-background-effects">
+          <div className="scanlines"></div>
+          <div className="glow-particles"></div>
+        </div>
+      )}
 
       <Content style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: token.paddingXL,
+        padding: isMobile ? token.paddingMD : token.paddingXL,
         position: 'relative',
         zIndex: 1
       }}>
         <Row justify="center" align="middle" style={{ width: '100%', maxWidth: '1200px' }}>
-          <Col xs={24} lg={12} style={{ textAlign: 'center', marginBottom: token.marginXL }}>
+          {/* Logo and title section */}
+          <Col xs={24} lg={12} style={{
+            textAlign: 'center',
+            marginBottom: isMobile ? token.marginMD : token.marginXL,
+            display: isMobile ? 'block' : 'block'
+          }}>
             <div className="ascii-logo-container">
               <pre className="ascii-logo" style={{
                 fontFamily: token.fontFamily,
-                fontSize: '12px',
+                fontSize: isMobile ? '8px' : '12px',
                 lineHeight: 1.2,
                 color: token.colorPrimary,
                 margin: 0,
-                whiteSpace: 'pre'
+                whiteSpace: 'pre',
+                overflow: 'hidden'
               }}>
-                {ASCII_LOGO}
+                {isMobile ? ASCII_LOGO_MOBILE : ASCII_LOGO}
               </pre>
             </div>
 
-            <Space direction="vertical" size="large" style={{ marginTop: token.marginXL }}>
-              <Title level={2} style={{
+            <Space direction="vertical" size={isMobile ? "middle" : "large"} style={{
+              marginTop: isMobile ? token.marginMD : token.marginXL
+            }}>
+              <Title level={isMobile ? 3 : 2} style={{
                 color: token.colorPrimary,
                 fontFamily: token.fontFamily,
                 margin: 0,
                 fontWeight: 'bold'
               }}>
                 <DesktopOutlined style={{ marginRight: token.marginSM }} />
-                TERMINAL ACCESS
+                {isMobile ? 'CLOUD INTERFACE' : 'TERMINAL ACCESS'}
               </Title>
 
-              <Text style={{
-                color: token.colorTextSecondary,
-                fontFamily: token.fontFamily,
-                fontSize: token.fontSizeLG,
-                display: 'block'
-              }}>
-                Secure cloud interface for advanced file management
-              </Text>
+              {!isMobile && (
+                <Text style={{
+                  color: token.colorTextSecondary,
+                  fontFamily: token.fontFamily,
+                  fontSize: token.fontSizeLG,
+                  display: 'block'
+                }}>
+                  Secure cloud interface for advanced file management
+                </Text>
+              )}
             </Space>
           </Col>
 
+          {/* Login form section */}
           <Col xs={24} lg={12}>
             <Card
               className="login-card"
@@ -365,12 +397,12 @@ const Login: React.FC = () => {
                 borderRadius: token.borderRadiusLG,
                 boxShadow: `0 0 30px ${token.colorPrimary}40`,
                 backdropFilter: 'blur(10px)',
-                maxWidth: '500px',
+                maxWidth: isMobile ? '100%' : '500px',
                 margin: '0 auto'
               }}
               styles={{
                 body: {
-                  padding: token.paddingXL
+                  padding: isMobile ? token.paddingMD : token.paddingXL
                 }
               }}
             >
@@ -379,47 +411,52 @@ const Login: React.FC = () => {
                 onChange={setActiveTab}
                 items={items}
                 centered
-                size="large"
+                size={isMobile ? "middle" : "large"}
                 style={{
                   fontFamily: token.fontFamily
                 }}
                 tabBarStyle={{
-                  marginBottom: token.marginLG,
+                  marginBottom: isMobile ? token.marginMD : token.marginLG,
                   borderBottom: `1px solid ${token.colorBorder}`
                 }}
               />
 
-              <Divider style={{
-                borderColor: token.colorBorder,
-                margin: `${token.marginLG}px 0`
-              }}>
-                <Text style={{
-                  color: token.colorTextSecondary,
-                  fontFamily: token.fontFamily,
-                  fontSize: token.fontSizeSM
-                }}>
-                  SECURE CONNECTION
-                </Text>
-              </Divider>
+              {/* Security info - simplified on mobile */}
+              {!isMobile && (
+                <>
+                  <Divider style={{
+                    borderColor: token.colorBorder,
+                    margin: `${token.marginLG}px 0`
+                  }}>
+                    <Text style={{
+                      color: token.colorTextSecondary,
+                      fontFamily: token.fontFamily,
+                      fontSize: token.fontSizeSM
+                    }}>
+                      SECURE CONNECTION
+                    </Text>
+                  </Divider>
 
-              <div style={{ textAlign: 'center' }}>
-                <Space direction="vertical" size="small">
-                  <Text style={{
-                    color: token.colorTextTertiary,
-                    fontFamily: token.fontFamily,
-                    fontSize: token.fontSizeSM
-                  }}>
-                    <SecurityScanOutlined style={{ marginRight: token.marginXS }} />
-                    ENCRYPTED TRANSMISSION
-                  </Text>
-                  <Text style={{
-                    color: token.colorTextTertiary,
-                    fontFamily: token.fontFamily,
-                    fontSize: token.fontSizeSM
-                  }}>
-                  </Text>
-                </Space>
-              </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <Space direction="vertical" size="small">
+                      <Text style={{
+                        color: token.colorTextTertiary,
+                        fontFamily: token.fontFamily,
+                        fontSize: token.fontSizeSM
+                      }}>
+                        <SecurityScanOutlined style={{ marginRight: token.marginXS }} />
+                        ENCRYPTED TRANSMISSION
+                      </Text>
+                      <Text style={{
+                        color: token.colorTextTertiary,
+                        fontFamily: token.fontFamily,
+                        fontSize: token.fontSizeSM
+                      }}>
+                      </Text>
+                    </Space>
+                  </div>
+                </>
+              )}
             </Card>
           </Col>
         </Row>

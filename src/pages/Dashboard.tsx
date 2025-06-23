@@ -25,14 +25,12 @@ import {
   UploadOutlined,
   EyeOutlined,
   MoreOutlined,
-  ArrowUpOutlined,
   ClockCircleOutlined,
-  CheckCircleOutlined,
   ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { itemsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { themeConstants } from '../theme';
+import { colors, spacing } from '../theme';
 
 const { Title, Text } = Typography;
 
@@ -66,7 +64,7 @@ const Dashboard: React.FC = () => {
       const itemsArray = Array.isArray(items) ? items : [];
 
       // Calculate storage used (simplified - in real app you'd get this from API)
-      const totalSize = itemsArray.reduce((acc, item) => {
+      const totalSize = itemsArray.reduce((acc, _) => {
         // This is a simplified calculation - you'd need actual file sizes from API
         return acc + 1; // Assuming 1 unit per file for demo
       }, 0);
@@ -141,22 +139,22 @@ const Dashboard: React.FC = () => {
 
   // File type icons mapping
   const fileTypeIcons = {
-    PDF: <FileOutlined style={{ color: themeConstants.colors.error }} />,
-    DOCX: <FileOutlined style={{ color: themeConstants.colors.primary[600] }} />,
-    EXCEL: <FileOutlined style={{ color: themeConstants.colors.success }} />,
-    POWERPOINT: <FileOutlined style={{ color: themeConstants.colors.error }} />,
-    ZIP: <FileOutlined style={{ color: themeConstants.colors.info }} />,
-    TEXT: <FileOutlined style={{ color: themeConstants.colors.neutral[500] }} />,
-    FILE: <FileOutlined style={{ color: themeConstants.colors.neutral[500] }} />,
+    PDF: <FileOutlined style={{ color: colors.error }} />,
+    DOCX: <FileOutlined style={{ color: colors.primary[600] }} />,
+    EXCEL: <FileOutlined style={{ color: colors.success }} />,
+    POWERPOINT: <FileOutlined style={{ color: colors.error }} />,
+    ZIP: <FileOutlined style={{ color: colors.info }} />,
+    TEXT: <FileOutlined style={{ color: colors.neutral[500] }} />,
+    FILE: <FileOutlined style={{ color: colors.neutral[500] }} />,
   };
 
   // Activity type icons mapping
   const activityTypeIcons = {
-    upload: <UploadOutlined style={{ color: themeConstants.colors.success }} />,
-    share: <UserOutlined style={{ color: themeConstants.colors.info }} />,
-    edit: <EyeOutlined style={{ color: themeConstants.colors.warning }} />,
-    delete: <ExclamationCircleOutlined style={{ color: themeConstants.colors.error }} />,
-    folder: <FolderOutlined style={{ color: themeConstants.colors.primary[600] }} />,
+    upload: <UploadOutlined style={{ color: colors.success }} />,
+    share: <UserOutlined style={{ color: colors.info }} />,
+    edit: <EyeOutlined style={{ color: colors.warning }} />,
+    delete: <ExclamationCircleOutlined style={{ color: colors.error }} />,
+    folder: <FolderOutlined style={{ color: colors.primary[600] }} />,
   };
 
   // Recent files table columns
@@ -189,7 +187,7 @@ const Dashboard: React.FC = () => {
       key: 'modified',
       render: (modified: string) => (
         <Space>
-          <ClockCircleOutlined style={{ color: themeConstants.colors.text.tertiary }} />
+          <ClockCircleOutlined style={{ color: colors.text.tertiary }} />
           <Text type="secondary">{formatTimeAgo(modified)}</Text>
         </Space>
       ),
@@ -208,7 +206,7 @@ const Dashboard: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (record: any) => (
+      render: () => (
         <Space>
           <Tooltip title="View">
             <Button type="text" icon={<EyeOutlined />} size="small" />
@@ -236,7 +234,7 @@ const Dashboard: React.FC = () => {
   return (
     <div>
       {/* Page Header */}
-      <div style={{ marginBottom: themeConstants.spacing.xl }}>
+      <div style={{ marginBottom: spacing.xl }}>
         <Title level={2} style={{ margin: 0 }}>
           Dashboard
         </Title>
@@ -246,14 +244,14 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Statistics Cards */}
-      <Row gutter={[24, 24]} style={{ marginBottom: themeConstants.spacing.xl }}>
+      <Row gutter={[24, 24]} style={{ marginBottom: spacing.xl }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
               title="Total Files"
               value={data.totalFiles}
               prefix={<FileOutlined />}
-              valueStyle={{ color: themeConstants.colors.primary[600] }}
+              valueStyle={{ color: colors.primary[600] }}
             />
           </Card>
         </Col>
@@ -263,7 +261,7 @@ const Dashboard: React.FC = () => {
               title="Storage Used"
               value={data.storageUsed}
               prefix={<CloudOutlined />}
-              valueStyle={{ color: themeConstants.colors.success }}
+              valueStyle={{ color: colors.success }}
             />
           </Card>
         </Col>
@@ -273,7 +271,7 @@ const Dashboard: React.FC = () => {
               title="Active User"
               value={user?.username || 'Unknown'}
               prefix={<UserOutlined />}
-              valueStyle={{ color: themeConstants.colors.info }}
+              valueStyle={{ color: colors.info }}
             />
           </Card>
         </Col>
@@ -283,7 +281,7 @@ const Dashboard: React.FC = () => {
               title="Folders"
               value={0}
               prefix={<FolderOutlined />}
-              valueStyle={{ color: themeConstants.colors.warning }}
+              valueStyle={{ color: colors.warning }}
             />
           </Card>
         </Col>
@@ -312,8 +310,8 @@ const Dashboard: React.FC = () => {
               />
             ) : (
               <div style={{ textAlign: 'center', padding: '40px' }}>
-                <FileOutlined style={{ fontSize: 48, color: themeConstants.colors.text.tertiary }} />
-                <div style={{ marginTop: 16, color: themeConstants.colors.text.secondary }}>
+                <FileOutlined style={{ fontSize: 48, color: colors.text.tertiary }} />
+                <div style={{ marginTop: 16, color: colors.text.secondary }}>
                   No files uploaded yet
                 </div>
                 <Button type="primary" style={{ marginTop: 16 }}>
@@ -327,20 +325,20 @@ const Dashboard: React.FC = () => {
         {/* Storage Overview */}
         <Col xs={24} lg={8}>
           <Card title="Storage Overview" style={{ height: '100%' }}>
-            <div style={{ marginBottom: themeConstants.spacing.lg }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: themeConstants.spacing.sm }}>
+            <div style={{ marginBottom: spacing.lg }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: spacing.sm }}>
                 <Text>Total Storage</Text>
                 <Text strong>{data.storageUsed} / 10 GB</Text>
               </div>
               <Progress
                 percent={Math.min((data.totalFiles / 100) * 100, 100)}
-                strokeColor={themeConstants.colors.primary[600]}
+                strokeColor={colors.primary[600]}
                 showInfo={false}
               />
             </div>
 
             <div>
-              <Text strong style={{ marginBottom: themeConstants.spacing.md, display: 'block' }}>
+              <Text strong style={{ marginBottom: spacing.md, display: 'block' }}>
                 File Types
               </Text>
               <div style={{ textAlign: 'center', padding: '20px' }}>
@@ -352,7 +350,7 @@ const Dashboard: React.FC = () => {
       </Row>
 
       {/* Recent Activity */}
-      <Row style={{ marginTop: themeConstants.spacing.xl }}>
+      <Row style={{ marginTop: spacing.xl }}>
         <Col span={24}>
           <Card title="Recent Activity">
             {data.recentActivity.length > 0 ? (
@@ -364,7 +362,7 @@ const Dashboard: React.FC = () => {
                       avatar={
                         <Avatar
                           icon={activityTypeIcons[item.type as keyof typeof activityTypeIcons]}
-                          style={{ backgroundColor: themeConstants.colors.background.secondary }}
+                          style={{ backgroundColor: colors.background.secondary }}
                         />
                       }
                       title={
@@ -376,7 +374,7 @@ const Dashboard: React.FC = () => {
                       }
                       description={
                         <Space>
-                          <ClockCircleOutlined style={{ color: themeConstants.colors.text.tertiary }} />
+                          <ClockCircleOutlined style={{ color: colors.text.tertiary }} />
                           <Text type="secondary">{item.time}</Text>
                         </Space>
                       }
@@ -386,8 +384,8 @@ const Dashboard: React.FC = () => {
               />
             ) : (
               <div style={{ textAlign: 'center', padding: '40px' }}>
-                <ClockCircleOutlined style={{ fontSize: 48, color: themeConstants.colors.text.tertiary }} />
-                <div style={{ marginTop: 16, color: themeConstants.colors.text.secondary }}>
+                <ClockCircleOutlined style={{ fontSize: 48, color: colors.text.tertiary }} />
+                <div style={{ marginTop: 16, color: colors.text.secondary }}>
                   No recent activity
                 </div>
               </div>
@@ -397,7 +395,7 @@ const Dashboard: React.FC = () => {
       </Row>
 
       {/* Quick Actions */}
-      <Row style={{ marginTop: themeConstants.spacing.xl }}>
+      <Row style={{ marginTop: spacing.xl }}>
         <Col span={24}>
           <Card title="Quick Actions">
             <Row gutter={[16, 16]}>
