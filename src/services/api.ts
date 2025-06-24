@@ -43,6 +43,7 @@ export interface Item {
   contentType: string;
   createdAt: string;
   size?: number;
+  isShared?: boolean;
 }
 
 // Interface for login response
@@ -64,6 +65,14 @@ export interface UploadResponse {
   filename: string;
   contentType: string;
   createdAt: string;
+}
+
+// Interface for shared URL response
+export interface SharedUrlResponse {
+  shared_url: string;
+  item_id: number;
+  filename: string;
+  content_type: string;
 }
 
 // JWT token management
@@ -226,6 +235,18 @@ export const itemsAPI = {
 
     return response.data;
   },
+
+  // Toggle file sharing
+  toggleShared: async (id: number): Promise<void> => {
+    await api.post(`/items/${id}/toggle_shared`);
+  },
+
+  // Get shared URL for file
+  getSharedUrl: async (id: number): Promise<SharedUrlResponse> => {
+    const response = await api.get(`/items/${id}/get_shared_url`);
+    return response.data;
+  },
+
 };
 
 export default api;

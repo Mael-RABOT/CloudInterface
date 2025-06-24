@@ -343,7 +343,7 @@ const Editor: React.FC<EditorProps> = ({
                 style={{
                   fontFamily: token.fontFamily,
                   minHeight: isMobile ? '32px' : 'auto',
-                  backgroundColor: '#000000',
+                  backgroundColor: token.colorBgContainer,
                   borderColor: '#00ff00',
                   color: '#00ff00',
                   borderWidth: '1px',
@@ -358,7 +358,7 @@ const Editor: React.FC<EditorProps> = ({
                 style={{
                   fontFamily: token.fontFamily,
                   minHeight: isMobile ? '32px' : 'auto',
-                  backgroundColor: '#000000',
+                  backgroundColor: token.colorBgContainer,
                   borderColor: '#00ff00',
                   color: '#00ff00',
                   borderWidth: '1px',
@@ -372,7 +372,7 @@ const Editor: React.FC<EditorProps> = ({
                 style={{
                   fontFamily: token.fontFamily,
                   minHeight: isMobile ? '32px' : 'auto',
-                  backgroundColor: '#000000',
+                  backgroundColor: token.colorBgContainer,
                   borderColor: '#00ff00',
                   color: '#00ff00',
                   borderWidth: '1px',
@@ -392,7 +392,7 @@ const Editor: React.FC<EditorProps> = ({
                 fontFamily: token.fontFamily,
                 fontWeight: 'bold',
                 minHeight: isMobile ? '32px' : 'auto',
-                backgroundColor: '#000000',
+                backgroundColor: token.colorBgContainer,
                 borderColor: '#00ff00',
                 color: '#00ff00',
                 borderWidth: '1px',

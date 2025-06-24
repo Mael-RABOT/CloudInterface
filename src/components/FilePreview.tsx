@@ -93,6 +93,15 @@ const FilePreview: React.FC<FilePreviewProps> = ({
         }
         footer={null}
         onCancel={onCloseImagePreview}
+        closeIcon={
+          <div style={{
+            color: '#52c41a',
+            fontSize: '32px',
+            fontWeight: 'bold'
+          }}>
+            ✕
+          </div>
+        }
         width={isMobile ? '95vw' : 800}
         style={{
           fontFamily: token.fontFamily,
@@ -201,6 +210,15 @@ const FilePreview: React.FC<FilePreviewProps> = ({
           </Button>
         ]}
         onCancel={onClosePdfPreview}
+        closeIcon={
+          <div style={{
+            color: '#52c41a',
+            fontSize: '32px',
+            fontWeight: 'bold'
+          }}>
+            ✕
+          </div>
+        }
         width={isMobile ? '95vw' : 1000}
         style={{
           fontFamily: token.fontFamily,
@@ -298,6 +316,15 @@ const FilePreview: React.FC<FilePreviewProps> = ({
           </Button>
         ]}
         onCancel={onCloseTextPreview}
+        closeIcon={
+          <div style={{
+            color: '#52c41a',
+            fontSize: '32px',
+            fontWeight: 'bold'
+          }}>
+            ✕
+          </div>
+        }
         width={isMobile ? '95vw' : 1000}
         style={{
           fontFamily: token.fontFamily,
@@ -396,6 +423,15 @@ const FilePreview: React.FC<FilePreviewProps> = ({
           </Button>
         ]}
         onCancel={onCloseUnsupportedFile}
+        closeIcon={
+          <div style={{
+            color: '#52c41a',
+            fontSize: '32px',
+            fontWeight: 'bold'
+          }}>
+            ✕
+          </div>
+        }
         width={isMobile ? '90vw' : 500}
         style={{
           fontFamily: token.fontFamily,
