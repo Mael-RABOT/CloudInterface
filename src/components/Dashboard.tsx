@@ -22,6 +22,7 @@ import ShareModal from './ShareModal';
 import UploadModal from './UploadModal';
 import FileGrid from './FileGrid';
 import CustomTree from './CustomTree';
+import { useNavigate } from 'react-router-dom';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -30,6 +31,7 @@ const Dashboard: React.FC = () => {
   const { token } = theme.useToken();
   const { logout, user } = useAuth();
   const { isMobile, isSmallMobile } = useDeviceDetection();
+  const navigate = useNavigate();
   const [currentLocation, setCurrentLocation] = useState<string>('');
   const [files, setFiles] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,10 +60,6 @@ const Dashboard: React.FC = () => {
   const [pdfPreviewVisible, setPdfPreviewVisible] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState('');
   const [pdfPreviewTitle, setPdfPreviewTitle] = useState('');
-  const [textPreviewVisible, setTextPreviewVisible] = useState(false);
-  const [textPreviewContent, setTextPreviewContent] = useState('');
-  const [textPreviewTitle, setTextPreviewTitle] = useState('');
-  const [textPreviewFileId, setTextPreviewFileId] = useState<number | undefined>();
   const [unsupportedFileModalVisible, setUnsupportedFileModalVisible] = useState(false);
   const [unsupportedFileItem, setUnsupportedFileItem] = useState<Item | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -147,25 +145,30 @@ const ASCII_HEADER = isMobile ? '' : `
   };
 
   const handlePreview = async (file: Item) => {
+    // Check if it's a text file that should open in edit mode
+    const isTextFile = file.contentType.startsWith('text/') ||
+                      file.contentType === 'application/json' ||
+                      file.contentType === 'application/xml' ||
+                      file.filename.endsWith('.txt') ||
+                      file.filename.endsWith('.json') ||
+                      file.filename.endsWith('.xml') ||
+                      file.filename.endsWith('.md');
+
+    if (isTextFile) {
+      // Navigate to the edit page for text files
+      navigate(`/item/${file.id}`);
+      return;
+    }
+
     setPreviewLoading(true);
 
-    // Immediately open the appropriate modal based on file type
+    // Handle other file types with preview modals
     if (file.contentType.startsWith('image/')) {
       setPreviewTitle(getOriginalFilename(file.filename));
       setPreviewVisible(true);
     } else if (file.contentType === 'application/pdf' || file.filename.toLowerCase().endsWith('.pdf')) {
       setPdfPreviewTitle(getOriginalFilename(file.filename));
       setPdfPreviewVisible(true);
-    } else if (file.contentType.startsWith('text/') ||
-               file.contentType === 'application/json' ||
-               file.contentType === 'application/xml' ||
-               file.filename.endsWith('.txt') ||
-               file.filename.endsWith('.json') ||
-               file.filename.endsWith('.xml') ||
-               file.filename.endsWith('.md')) {
-      setTextPreviewTitle(getOriginalFilename(file.filename));
-      setTextPreviewFileId(file.id);
-      setTextPreviewVisible(true);
     } else {
       console.log("unsupported file type", file.contentType);
       message.warning(`Cannot preview ${getOriginalFilename(file.filename)}. This file type (${file.contentType}) cannot be previewed.`);
@@ -183,15 +186,6 @@ const ASCII_HEADER = isMobile ? '' : `
       } else if (file.contentType === 'application/pdf' || file.filename.toLowerCase().endsWith('.pdf')) {
         const url = window.URL.createObjectURL(blob);
         setPdfPreviewUrl(url);
-      } else if (file.contentType.startsWith('text/') ||
-                 file.contentType === 'application/json' ||
-                 file.contentType === 'application/xml' ||
-                 file.filename.endsWith('.txt') ||
-                 file.filename.endsWith('.json') ||
-                 file.filename.endsWith('.xml') ||
-                 file.filename.endsWith('.md')) {
-        const text = await blob.text();
-        setTextPreviewContent(text);
       }
     } catch (error: any) {
       console.error('Preview error:', error);
@@ -199,28 +193,12 @@ const ASCII_HEADER = isMobile ? '' : `
       // Close the modal on error
       setPreviewVisible(false);
       setPdfPreviewVisible(false);
-      setTextPreviewVisible(false);
       setPreviewImage('');
       setPdfPreviewUrl('');
-      setTextPreviewContent('');
       setPreviewTitle('');
       setPdfPreviewTitle('');
-      setTextPreviewTitle('');
-      setTextPreviewFileId(undefined);
     } finally {
       setPreviewLoading(false);
-    }
-  };
-
-  const handleFileUpdate = async (fileId: number, content: string, filename: string) => {
-    try {
-      await itemsAPI.updateFile(fileId, content, filename);
-      message.success('File updated successfully!');
-      // Reload files to reflect changes
-      loadFiles();
-    } catch (error: any) {
-      console.error('File update error:', error);
-      message.error(`Failed to update file: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -872,10 +850,6 @@ const ASCII_HEADER = isMobile ? '' : `
         pdfPreviewVisible={pdfPreviewVisible}
         pdfPreviewUrl={pdfPreviewUrl}
         pdfPreviewTitle={pdfPreviewTitle}
-        textPreviewVisible={textPreviewVisible}
-        textPreviewContent={textPreviewContent}
-        textPreviewTitle={textPreviewTitle}
-        textPreviewFileId={textPreviewFileId}
         unsupportedFileModalVisible={unsupportedFileModalVisible}
         unsupportedFileItem={unsupportedFileItem}
         onCloseImagePreview={() => {
@@ -888,18 +862,11 @@ const ASCII_HEADER = isMobile ? '' : `
           setPdfPreviewUrl('');
           setPdfPreviewTitle('');
         }}
-        onCloseTextPreview={() => {
-          setTextPreviewVisible(false);
-          setTextPreviewContent('');
-          setTextPreviewTitle('');
-          setTextPreviewFileId(undefined);
-        }}
         onCloseUnsupportedFile={() => {
           setUnsupportedFileModalVisible(false);
           setUnsupportedFileItem(null);
         }}
         onDownload={handleDownload}
-        onFileUpdated={handleFileUpdate}
         getOriginalFilename={getOriginalFilename}
       />
     </Layout>

@@ -8,7 +8,6 @@ import {
 } from '@ant-design/icons';
 import { Image } from 'antd';
 import type { Item } from '../services/api';
-import Editor from './Editor';
 import { useDeviceDetection } from '../utils/deviceDetection';
 
 const { Text: TypographyText } = Typography;
@@ -25,12 +24,6 @@ interface FilePreviewProps {
   pdfPreviewUrl: string;
   pdfPreviewTitle: string;
 
-  // Text preview
-  textPreviewVisible: boolean;
-  textPreviewContent: string;
-  textPreviewTitle: string;
-  textPreviewFileId?: number;
-
   // Unsupported file
   unsupportedFileModalVisible: boolean;
   unsupportedFileItem: Item | null;
@@ -38,10 +31,8 @@ interface FilePreviewProps {
   // Handlers
   onCloseImagePreview: () => void;
   onClosePdfPreview: () => void;
-  onCloseTextPreview: () => void;
   onCloseUnsupportedFile: () => void;
   onDownload: (file: Item) => void;
-  onFileUpdated?: (fileId: number, content: string, filename: string) => void;
 
   // Helper function
   getOriginalFilename: (filename: string) => string;
@@ -55,18 +46,12 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   pdfPreviewVisible,
   pdfPreviewUrl,
   pdfPreviewTitle,
-  textPreviewVisible,
-  textPreviewContent,
-  textPreviewTitle,
-  textPreviewFileId,
   unsupportedFileModalVisible,
   unsupportedFileItem,
   onCloseImagePreview,
   onClosePdfPreview,
-  onCloseTextPreview,
   onCloseUnsupportedFile,
   onDownload,
-  onFileUpdated,
   getOriginalFilename
 }) => {
   const { token } = theme.useToken();
@@ -272,113 +257,6 @@ const FilePreview: React.FC<FilePreviewProps> = ({
               borderRadius: token.borderRadius
             }}
             title={pdfPreviewTitle}
-          />
-        )}
-      </Modal>
-
-      {/* Text Preview Modal */}
-      <Modal
-        open={textPreviewVisible}
-        title={
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: token.marginSM,
-            fontFamily: token.fontFamily,
-            color: token.colorPrimary,
-            fontWeight: 'bold',
-            fontSize: isMobile ? '14px' : '16px'
-          }}>
-            <FileTextOutlined />
-            {textPreviewTitle}
-          </div>
-        }
-        footer={[
-          <Button
-            key="download"
-            icon={<DownloadOutlined />}
-            onClick={() => {
-              if (unsupportedFileItem) {
-                onDownload(unsupportedFileItem);
-              }
-            }}
-            size={isMobile ? "small" : "middle"}
-            style={{
-              fontFamily: token.fontFamily,
-              fontWeight: 'bold',
-              background: token.colorBgContainer,
-              borderColor: token.colorBorder,
-              color: token.colorText,
-              minHeight: isMobile ? '36px' : 'auto'
-            }}
-          >
-            {isMobile ? 'DOWNLOAD' : 'DOWNLOAD'}
-          </Button>
-        ]}
-        onCancel={onCloseTextPreview}
-        closeIcon={
-          <div style={{
-            color: '#52c41a',
-            fontSize: '32px',
-            fontWeight: 'bold'
-          }}>
-            ✕
-          </div>
-        }
-        width={isMobile ? '95vw' : 1000}
-        style={{
-          fontFamily: token.fontFamily,
-          top: isMobile ? 20 : 100
-        }}
-        styles={{
-          body: {
-            padding: isMobile ? '12px' : '24px',
-            maxHeight: isMobile ? '70vh' : '80vh',
-            overflow: 'auto'
-          },
-          header: {
-            padding: isMobile ? '12px 16px' : '16px 24px'
-          }
-        }}
-      >
-        {previewLoading ? (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: isMobile ? '50vh' : '70vh',
-            background: token.colorBgContainer,
-            border: `1px solid ${token.colorBorder}`,
-            borderRadius: token.borderRadius
-          }}>
-            <div style={{
-              textAlign: 'center',
-              color: token.colorTextSecondary,
-              fontFamily: token.fontFamily
-            }}>
-              <div style={{
-                fontSize: isMobile ? '20px' : '24px',
-                marginBottom: token.marginSM,
-                color: token.colorPrimary
-              }}>
-                <LoadingOutlined />
-              </div>
-              <TypographyText style={{ fontSize: isMobile ? '12px' : '14px' }}>
-                LOADING TEXT...
-              </TypographyText>
-            </div>
-          </div>
-        ) : (
-          <Editor
-            content={textPreviewContent}
-            filename={textPreviewTitle}
-            fileId={textPreviewFileId}
-            onSave={onFileUpdated}
-            readOnly={false}
-            style={{
-              height: isMobile ? '50vh' : '70vh',
-              fontFamily: token.fontFamily
-            }}
           />
         )}
       </Modal>

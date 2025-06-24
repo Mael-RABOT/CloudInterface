@@ -4,8 +4,6 @@ import { theme } from 'antd';
 import { ShareAltOutlined } from '@ant-design/icons';
 import { useDeviceDetection } from '../utils/deviceDetection';
 
-const { Text } = Typography;
-
 interface ShareModalProps {
   visible: boolean;
   onClose: () => void;

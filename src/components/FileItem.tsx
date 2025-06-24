@@ -157,8 +157,8 @@ const FileItem: React.FC<FileItemProps> = ({
             }}
             style={{
               color: '#00ff00',
-              background: 'rgba(0, 255, 0, 0.1)',
-              border: '1px solid rgba(0, 255, 0, 0.3)',
+              background: token.colorBgContainer,
+              border: `1px solid ${token.colorBorder}`,
               borderRadius: '6px',
               minWidth: '32px',
               height: '32px'
@@ -174,8 +174,8 @@ const FileItem: React.FC<FileItemProps> = ({
             }}
             style={{
               color: '#00ff00',
-              background: 'rgba(0, 255, 0, 0.1)',
-              border: '1px solid rgba(0, 255, 0, 0.3)',
+              background: token.colorBgContainer,
+              border: `1px solid ${token.colorBorder}`,
               borderRadius: '6px',
               minWidth: '32px',
               height: '32px'
@@ -191,8 +191,8 @@ const FileItem: React.FC<FileItemProps> = ({
               onDelete(file);
             }}
             style={{
-              background: 'rgba(255, 77, 79, 0.1)',
-              border: '1px solid rgba(255, 77, 79, 0.3)',
+              background: token.colorBgContainer,
+              border: `1px solid ${token.colorBorder}`,
               borderRadius: '6px',
               minWidth: '32px',
               height: '32px'
@@ -315,6 +315,7 @@ const FileItem: React.FC<FileItemProps> = ({
             color: token.colorPrimary,
             fontFamily: token.fontFamily,
             fontSize: token.fontSizeSM,
+            background: token.colorBgContainer,
             padding: '2px 6px'
           }}
         />
@@ -330,6 +331,7 @@ const FileItem: React.FC<FileItemProps> = ({
             color: token.colorInfo,
             fontFamily: token.fontFamily,
             fontSize: token.fontSizeSM,
+            background: token.colorBgContainer,
             padding: '2px 6px'
           }}
         />
@@ -345,6 +347,7 @@ const FileItem: React.FC<FileItemProps> = ({
             color: token.colorSuccess,
             fontFamily: token.fontFamily,
             fontSize: token.fontSizeSM,
+            background: token.colorBgContainer,
             padding: '2px 6px'
           }}
         />
@@ -360,7 +363,8 @@ const FileItem: React.FC<FileItemProps> = ({
           style={{
             fontFamily: token.fontFamily,
             fontSize: token.fontSizeSM,
-            padding: '2px 6px'
+            padding: '2px 6px',
+            background: token.colorBgContainer,
           }}
         />
       </div>

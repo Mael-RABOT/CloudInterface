@@ -23,7 +23,7 @@ interface EditorProps {
   content?: string;
   filename?: string;
   fileId?: number;
-  onSave?: (fileId: number, content: string, filename: string) => void;
+  onSave?: (content: string, filename: string, fileId?: number) => void;
   readOnly?: boolean;
   placeholder?: string;
   autoFocus?: boolean;
@@ -109,13 +109,19 @@ const Editor: React.FC<EditorProps> = ({
 
   // Get selected text
   const getSelectedText = (): string => {
-    return state.content.substring(state.selectionStart, state.selectionEnd);
+    if (!textareaRef.current) return '';
+    const textarea = textareaRef.current;
+    return state.content.substring(textarea.selectionStart, textarea.selectionEnd);
   };
 
   // Replace selected text
   const replaceSelectedText = (newText: string) => {
-    const before = state.content.substring(0, state.selectionStart);
-    const after = state.content.substring(state.selectionEnd);
+    if (!textareaRef.current) return;
+    const textarea = textareaRef.current;
+    const selectionStart = textarea.selectionStart;
+    const selectionEnd = textarea.selectionEnd;
+    const before = state.content.substring(0, selectionStart);
+    const after = state.content.substring(selectionEnd);
     const newContent = before + newText + after;
 
     setState(prev => ({
@@ -131,7 +137,7 @@ const Editor: React.FC<EditorProps> = ({
     setTimeout(() => {
       if (textareaRef.current && textareaRef.current.setSelectionRange) {
         textareaRef.current.focus();
-        const newCursorPos = state.selectionStart + newText.length;
+        const newCursorPos = before.length + newText.length;
         textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
       }
     }, 0);
@@ -143,44 +149,128 @@ const Editor: React.FC<EditorProps> = ({
     let formattedText = selectedText;
 
     switch (format) {
-      case 'bold':
-        formattedText = `**${selectedText}**`;
+      case 'bold': {
+        const boldRegex = /^\*\*(.*)\*\*$/s;
+        if (boldRegex.test(selectedText)) {
+          formattedText = selectedText.replace(boldRegex, '$1');
+        } else {
+          formattedText = `**${selectedText}**`;
+        }
         break;
-      case 'italic':
-        formattedText = `*${selectedText}*`;
+      }
+      case 'italic': {
+        const italicRegex = /^\*(.*)\*$/s;
+        if (italicRegex.test(selectedText)) {
+          formattedText = selectedText.replace(italicRegex, '$1');
+        } else {
+          formattedText = `*${selectedText}*`;
+        }
         break;
-      case 'underline':
-        formattedText = `__${selectedText}__`;
+      }
+      case 'underline': {
+        const underlineRegex = /^__(.*)__$/s;
+        if (underlineRegex.test(selectedText)) {
+          formattedText = selectedText.replace(underlineRegex, '$1');
+        } else {
+          formattedText = `__${selectedText}__`;
+        }
         break;
-      case 'strikethrough':
-        formattedText = `~~${selectedText}~~`;
+      }
+      case 'strikethrough': {
+        const strikeRegex = /^~~(.*)~~$/s;
+        if (strikeRegex.test(selectedText)) {
+          formattedText = selectedText.replace(strikeRegex, '$1');
+        } else {
+          formattedText = `~~${selectedText}~~`;
+        }
         break;
-      case 'code':
-        formattedText = `\`${selectedText}\``;
+      }
+      case 'code': {
+        const codeRegex = /^`([^`]*)`$/s;
+        if (codeRegex.test(selectedText)) {
+          formattedText = selectedText.replace(codeRegex, '$1');
+        } else {
+          formattedText = `\`${selectedText}\``;
+        }
         break;
-      case 'highlight':
-        formattedText = `==${selectedText}==`;
+      }
+      case 'highlight': {
+        const highlightRegex = /^==(.+)==$/s;
+        if (highlightRegex.test(selectedText)) {
+          formattedText = selectedText.replace(highlightRegex, '$1');
+        } else {
+          formattedText = `==${selectedText}==`;
+        }
         break;
-      case 'link':
-        formattedText = `[${selectedText}](url)`;
+      }
+      case 'link': {
+        const linkRegex = /^\[(.*)\]\((.*)\)$/s;
+        if (linkRegex.test(selectedText)) {
+          formattedText = selectedText.replace(linkRegex, '$1');
+        } else {
+          formattedText = `[${selectedText}](url)`;
+        }
         break;
-      case 'list-ordered':
-        formattedText = selectedText.split('\n').map(line => `1. ${line}`).join('\n');
+      }
+      case 'list-ordered': {
+        const lines = selectedText.split('\n');
+        if (lines.every(line => /^\d+\. /.test(line))) {
+          // Remove ordered list
+          formattedText = lines.map(line => line.replace(/^\d+\. /, '')).join('\n');
+        } else {
+          // Add ordered list
+          formattedText = lines.map((line, i) => `${i + 1}. ${line}`).join('\n');
+        }
         break;
-      case 'list-unordered':
-        formattedText = selectedText.split('\n').map(line => `- ${line}`).join('\n');
+      }
+      case 'list-unordered': {
+        const lines = selectedText.split('\n');
+        if (lines.every(line => /^- /.test(line))) {
+          // Remove unordered list
+          formattedText = lines.map(line => line.replace(/^- /, '')).join('\n');
+        } else {
+          // Add unordered list
+          formattedText = lines.map(line => `- ${line}`).join('\n');
+        }
         break;
-      case 'heading1':
-        formattedText = `# ${selectedText}`;
+      }
+      case 'heading1': {
+        const lines = selectedText.split('\n');
+        if (lines.every(line => /^# /.test(line))) {
+          formattedText = lines.map(line => line.replace(/^# /, '')).join('\n');
+        } else {
+          formattedText = lines.map(line => `# ${line}`).join('\n');
+        }
         break;
-      case 'heading2':
-        formattedText = `## ${selectedText}`;
+      }
+      case 'heading2': {
+        const lines = selectedText.split('\n');
+        if (lines.every(line => /^## /.test(line))) {
+          formattedText = lines.map(line => line.replace(/^## /, '')).join('\n');
+        } else {
+          formattedText = lines.map(line => `## ${line}`).join('\n');
+        }
         break;
-      case 'heading3':
-        formattedText = `### ${selectedText}`;
+      }
+      case 'heading3': {
+        const lines = selectedText.split('\n');
+        if (lines.every(line => /^### /.test(line))) {
+          formattedText = lines.map(line => line.replace(/^### /, '')).join('\n');
+        } else {
+          formattedText = lines.map(line => `### ${line}`).join('\n');
+        }
         break;
-      case 'quote':
-        formattedText = `> ${selectedText}`;
+      }
+      case 'quote': {
+        const lines = selectedText.split('\n');
+        if (lines.every(line => /^> /.test(line))) {
+          formattedText = lines.map(line => line.replace(/^> /, '')).join('\n');
+        } else {
+          formattedText = lines.map(line => `> ${line}`).join('\n');
+        }
+        break;
+      }
+      default:
         break;
     }
 
@@ -213,7 +303,10 @@ const Editor: React.FC<EditorProps> = ({
   // Save function
   const handleSave = () => {
     if (onSave && fileId) {
-      onSave(fileId, state.content, state.title);
+      console.log('Saving...');
+      console.log("content: ", state.content);
+      console.log("title: ", state.title);
+      onSave(state.content, state.title, fileId);
       setIsModified(false);
     }
   };
@@ -292,6 +385,48 @@ const Editor: React.FC<EditorProps> = ({
   ];
 
   const toolbarItems = isMobile ? mobileToolbarItems : desktopToolbarItems;
+
+  const getWordCount = () => {
+    return state.content.trim().split(/\s+/).filter(Boolean).length;
+  };
+
+  // Helper: get line and column from cursor
+  const getLineCol = () => {
+    if (!textareaRef.current) return { line: 1, col: 1 };
+    const pos = textareaRef.current.selectionStart;
+    const lines = state.content.slice(0, pos).split('\n');
+    return { line: lines.length, col: lines[lines.length - 1].length + 1 };
+  };
+
+  // Helper: get file type
+  const getFileType = () => {
+    if (!state.title) return 'Plain Text';
+    const ext = state.title.split('.').pop()?.toLowerCase();
+    if (!ext || ext === state.title) return 'Plain Text';
+    if (ext === 'md') return 'Markdown';
+    if (ext === 'json') return 'JSON';
+    if (ext === 'xml') return 'XML';
+    if (ext === 'txt') return 'Plain Text';
+    return ext.toUpperCase();
+  };
+
+  // Last saved time
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  useEffect(() => {
+    if (!isModified && state.historyIndex === state.history.length - 1) {
+      setLastSaved(new Date());
+    }
+    // eslint-disable-next-line
+  }, [isModified, state.historyIndex, state.history.length]);
+
+  const getLineCount = () => state.content.split('\n').length;
+
+  const encoding = 'UTF-8';
+  const lineEnding = 'LF';
+
+  const lineCol = getLineCol();
+  const fileType = getFileType();
+  const lineCount = getLineCount();
 
   return (
     <div style={{
@@ -399,14 +534,14 @@ const Editor: React.FC<EditorProps> = ({
                 borderStyle: 'solid'
               }}
             >
-              {isMobile ? 'SAVE' : 'SAVE'}
+              SAVE
             </Button>
           )}
         </Space>
       </div>
 
       {/* Toolbar */}
-      {!readOnly && (
+      {!readOnly && false && ( // Feature currently bugged
         <div style={{
           padding: isMobile ? token.paddingXS : token.paddingSM,
           borderBottom: `1px solid ${token.colorBorder}`,
@@ -425,6 +560,7 @@ const Editor: React.FC<EditorProps> = ({
                 onClick={() => formatText(item.format)}
                 style={{
                   fontFamily: token.fontFamily,
+                  color: token.colorText,
                   minWidth: isMobile ? '32px' : 'auto',
                   minHeight: isMobile ? '32px' : 'auto',
                   padding: isMobile ? '4px' : undefined
@@ -436,7 +572,7 @@ const Editor: React.FC<EditorProps> = ({
       )}
 
       {/* Editor */}
-      <div style={{ flex: 1, padding: isMobile ? token.paddingSM : token.paddingMD }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: isMobile ? token.paddingSM : token.paddingMD }}>
         <TextArea
           ref={textareaRef}
           value={state.content}
@@ -444,17 +580,16 @@ const Editor: React.FC<EditorProps> = ({
           onSelect={updateSelection}
           placeholder={placeholder}
           readOnly={readOnly}
-          autoSize={{ minRows: 10, maxRows: 50 }}
           style={{
+            flex: 1,
+            minHeight: 0,
             fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
             fontSize: isMobile ? '14px' : '16px',
             lineHeight: 1.5,
-            background: token.colorBgContainer,
             border: `1px solid ${token.colorBorder}`,
             borderRadius: token.borderRadius,
             resize: 'none',
-            height: '100%',
-            minHeight: isMobile ? '300px' : '400px'
+            height: '100%'
           }}
         />
       </div>
@@ -475,8 +610,20 @@ const Editor: React.FC<EditorProps> = ({
           {isModified && <span style={{ color: token.colorWarning }}>● Modified</span>}
           {!isModified && <span>Saved</span>}
         </div>
-        <div>
-          {state.content.length} characters
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <span>{getWordCount()} words</span>
+          <span>|</span>
+          <span>{state.content.length} chars</span>
+          <span>|</span>
+          <span>{lineCount} lines</span>
+          <span>|</span>
+          <span>Ln {lineCol.line}, Col {lineCol.col}</span>
+          <span>|</span>
+          <span>{fileType}</span>
+          <span>|</span>
+          <span>{encoding}</span>
+          <span>{lineEnding}</span>
+          {lastSaved && <span>Last saved: {lastSaved.toLocaleTimeString()}</span>}
         </div>
       </div>
     </div>

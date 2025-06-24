@@ -3,8 +3,6 @@ import { Modal, Button, Typography, Progress } from 'antd';
 import { theme } from 'antd';
 import { useDeviceDetection } from '../utils/deviceDetection';
 
-const { Text } = Typography;
-
 interface ConfirmationModalProps {
   visible: boolean;
   onCancel: () => void;

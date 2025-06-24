@@ -4,6 +4,7 @@ import { ConfigProvider, Spin, Layout } from 'antd';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
+import ItemEdit from './components/ItemEdit';
 import ProtectedRoute from './components/ProtectedRoute';
 import theme from './theme';
 import './App.css';
@@ -51,6 +52,16 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Protected item edit route */}
+          <Route
+            path="/item/:id"
+            element={
+              <ProtectedRoute>
+                <ItemEdit />
               </ProtectedRoute>
             }
           />

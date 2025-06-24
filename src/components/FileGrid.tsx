@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Typography } from 'antd';
 import { theme } from 'antd';
 import type { Item } from '../services/api';
@@ -17,11 +17,6 @@ interface FileGridProps {
   selectedFileIds: Set<number>;
   onFileSelect: (fileId: number, selected: boolean) => void;
   isMobile?: boolean;
-}
-
-interface ISortOption {
-  label: string;
-  value: string;
 }
 
 const FileGrid: React.FC<FileGridProps> = ({
