@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Button, Typography, Progress } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
 import { theme } from 'antd';
 import { useDeviceDetection } from '../utils/deviceDetection';
 
@@ -9,7 +10,7 @@ interface ConfirmationModalProps {
   onConfirm: () => void;
   title: string;
   icon: React.ReactNode;
-  description: string;
+  description: string | React.ReactNode;
   warning?: string;
   confirmText: string;
   cancelText?: string;
@@ -23,6 +24,7 @@ interface ConfirmationModalProps {
     totalItems?: number;
   };
   width?: number | string;
+  customAction?: React.ReactNode;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -40,7 +42,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   danger = false,
   success = false,
   progress,
-  width
+  width,
+  customAction
 }) => {
   const { token } = theme.useToken();
   const { isMobile } = useDeviceDetection();
@@ -95,11 +98,14 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       onCancel={onCancel}
       closeIcon={
         <div style={{
-          color: '#52c41a',
-          fontSize: '32px',
-          fontWeight: 'bold'
+          color: token.colorTextSecondary,
+          fontSize: '16px',
+          fontWeight: 'bold',
+          cursor: 'pointer',
+          marginLeft: '-30px',
+          marginTop: '10px'
         }}>
-          ✕
+          <CloseOutlined />
         </div>
       }
       footer={[
@@ -115,6 +121,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         >
           {cancelText}
         </Button>,
+        ...(customAction ? [customAction] : []),
         <Button
           key="confirm"
           type="primary"

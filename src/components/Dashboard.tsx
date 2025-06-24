@@ -251,6 +251,11 @@ const ASCII_HEADER = isMobile ? '' : `
     }
   };
 
+  const getSharedUrl = (fileId: number): string => {
+    //const sharedUrlResponse = await itemsAPI.getSharedUrl(fileId);
+    return `http://cloud.api.maelrabot.com/api/items/${fileId}/shared`;
+  };
+
   const handleShareConfirm = async () => {
     if (!fileToShare) return;
 
@@ -262,9 +267,7 @@ const ASCII_HEADER = isMobile ? '' : `
       await itemsAPI.toggleShared(fileToShare.id);
 
       if (!isFileAlreadyShared) {
-        // Only get shared URL and show modal if we're enabling sharing
-        const sharedUrlResponse = await itemsAPI.getSharedUrl(fileToShare.id);
-        setSharedUrl(sharedUrlResponse.shared_url);
+        setSharedUrl(getSharedUrl(fileToShare.id));
         setShareModalVisible(true);
       }
 
@@ -291,6 +294,19 @@ const ASCII_HEADER = isMobile ? '' : `
     setShareConfirmModalVisible(false);
     setFileToShare(null);
     setIsFileAlreadyShared(false);
+  };
+
+  const copyToClipboard = async () => {
+    if (!fileToShare) return;
+
+    try {
+      const sharedUrl = getSharedUrl(fileToShare.id);
+      await navigator.clipboard.writeText(sharedUrl);
+      message.success('Link copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      message.error('Failed to copy link to clipboard');
+    }
   };
 
   // Upload handlers
@@ -827,11 +843,60 @@ const ASCII_HEADER = isMobile ? '' : `
         onConfirm={handleShareConfirm}
         title={isFileAlreadyShared ? 'WARNING: DISABLE SHARING' : 'CONFIRM SHARE'}
         icon={<ShareAltOutlined />}
-        description={`You are about to share "${fileToShare ? getOriginalFilename(fileToShare.filename) : ''}".`}
+        description={isFileAlreadyShared
+          ? (
+            <div>
+              <div style={{ marginBottom: '12px' }}>
+                You are about to disable the sharing of<br />
+                <strong style={{ color: token.colorPrimary }}>
+                  "{fileToShare ? getOriginalFilename(fileToShare.filename) : ''}"
+                </strong>
+              </div>
+              <div style={{
+                padding: '8px 12px',
+                background: token.colorBgElevated,
+                border: `1px solid ${token.colorBorder}`,
+                borderRadius: '6px',
+                fontFamily: 'monospace',
+                fontSize: '13px',
+                color: token.colorTextSecondary,
+                wordBreak: 'break-all'
+              }}>
+                URL: {getSharedUrl(fileToShare?.id || 0)}
+              </div>
+            </div>
+          )
+          : (
+            <div>
+              You are about to share<br />
+              <strong style={{ color: token.colorPrimary }}>
+                "{fileToShare ? getOriginalFilename(fileToShare.filename) : ''}"
+              </strong>
+            </div>
+          )
+        }
         confirmText={isFileAlreadyShared ? 'DISABLE SHARING' : 'SHARE FILE'}
         loading={shareLoading}
         loadingText="SHARING..."
         success={true}
+        customAction={
+          isFileAlreadyShared ? (
+            <Button
+              type="primary"
+              onClick={copyToClipboard}
+              size={isMobile ? "large" : "middle"}
+              style={{
+                fontFamily: token.fontFamily,
+                fontWeight: 'bold',
+                background: token.colorSuccess,
+                borderColor: token.colorSuccess,
+                minHeight: isMobile ? '48px' : 'auto'
+              }}
+            >
+              COPY LINK
+            </Button>
+          ) : undefined
+        }
       />
 
       <ShareModal
