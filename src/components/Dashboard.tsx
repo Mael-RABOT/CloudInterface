@@ -353,7 +353,10 @@ const ASCII_HEADER = isMobile ? '' : `
           message.warning(`${successCount} files uploaded, ${failedCount} failed`);
         }
 
+        // Close modal and reload files after upload is complete
         setUploadModalVisible(false);
+        setUploadProgress(0);
+        setCurrentUploadFile('');
         loadFiles();
       }, 500);
 
@@ -365,6 +368,14 @@ const ASCII_HEADER = isMobile ? '' : `
     } finally {
       setUploadLoading(false);
     }
+  };
+
+  // Handle upload modal close with cleanup
+  const handleUploadModalClose = () => {
+    setUploadModalVisible(false);
+    setUploadProgress(0);
+    setCurrentUploadFile('');
+    setUploadLoading(false);
   };
 
   // Filter files by current location
@@ -810,7 +821,7 @@ const ASCII_HEADER = isMobile ? '' : `
       {/* Modals */}
       <UploadModal
         visible={uploadModalVisible}
-        onCancel={() => setUploadModalVisible(false)}
+        onCancel={handleUploadModalClose}
         onSubmit={handleUpload}
         loading={uploadLoading}
         progress={uploadProgress}

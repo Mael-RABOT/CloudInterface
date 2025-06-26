@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Upload, Progress, Button, Typography, Tooltip } from 'antd';
 import { theme } from 'antd';
 import { UploadOutlined, InboxOutlined, DeleteOutlined, FolderOutlined } from '@ant-design/icons';
@@ -31,18 +31,23 @@ const UploadModal: React.FC<UploadModalProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadForm] = Form.useForm();
 
+  // Reset form and selected files when modal is closed
+  useEffect(() => {
+    if (!visible) {
+      setSelectedFiles([]);
+      uploadForm.resetFields();
+      uploadForm.setFieldsValue({ location: currentLocation });
+    }
+  }, [visible, uploadForm, currentLocation]);
+
   const handleSubmit = (values: any) => {
     if (selectedFiles.length === 0) {
       return;
     }
     onSubmit(values, selectedFiles);
-    handleCancel();
   };
 
   const handleCancel = () => {
-    setSelectedFiles([]);
-    uploadForm.resetFields();
-    uploadForm.setFieldsValue({ location: currentLocation });
     onCancel();
   };
 
