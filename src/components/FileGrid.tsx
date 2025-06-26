@@ -69,7 +69,17 @@ const FileGrid: React.FC<FileGridProps> = ({
 
   if (isMobile) {
     return (
-      <div className="file-grid-mobile">
+      <div
+        className="file-grid-mobile"
+        style={{
+          width: '100%',
+          height: '100%',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '8px',
+          boxSizing: 'border-box'
+        }}
+      >
         {sortedFiles.map((file) => (
           <FileItem
             key={file.id}

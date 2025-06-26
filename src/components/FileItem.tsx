@@ -101,32 +101,53 @@ const FileItem: React.FC<FileItemProps> = ({
           background: selected ? 'rgba(0, 255, 0, 0.1)' : 'rgba(0, 255, 0, 0.05)',
           border: `1px solid ${selected ? '#00ff00' : 'rgba(0, 255, 0, 0.3)'}`,
           borderRadius: '12px',
-          padding: '16px',
+          padding: '12px 8px',
+          marginBottom: '8px',
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: '8px',
           cursor: 'pointer',
-          transition: 'all 0.2s ease'
+          transition: 'all 0.3s ease',
+          minHeight: '70px',
+          width: '100%',
+          boxSizing: 'border-box',
+          maxWidth: '100%',
+          overflow: 'hidden'
         }}
       >
-        <Checkbox
-          checked={selected}
-          onChange={(e) => {
-            e.stopPropagation();
-            onSelect(file.id, e.target.checked);
-          }}
-          style={{
-            transform: 'scale(1.2)',
-            filter: 'brightness(1.2) contrast(1.2)'
-          }}
-          className="custom-checkbox"
-        />
+        {!isMobile && (
+          <Checkbox
+            checked={selected}
+            onChange={(e) => {
+              e.stopPropagation();
+              onSelect(file.id, e.target.checked);
+            }}
+            style={{
+              transform: 'scale(1.1)',
+              filter: 'brightness(1.2) contrast(1.2)',
+              flexShrink: 0
+            }}
+            className="custom-checkbox"
+          />
+        )}
 
-        <div className="file-icon" style={{ fontSize: '24px', color: '#00ff00' }}>
+        <div className="file-icon" style={{
+          fontSize: '24px',
+          color: '#00ff00',
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '36px',
+          height: '36px',
+          background: 'rgba(0, 255, 0, 0.1)',
+          borderRadius: '8px',
+          border: '1px solid rgba(0, 255, 0, 0.2)'
+        }}>
           {getFileIcon(file.contentType, file.filename)}
         </div>
 
-        <div className="file-info" style={{ flex: 1, minWidth: 0 }}>
+        <div className="file-info" style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
           <div className="file-name" style={{
             fontSize: '14px',
             fontWeight: 'bold',
@@ -134,19 +155,40 @@ const FileItem: React.FC<FileItemProps> = ({
             marginBottom: '4px',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            lineHeight: '1.2'
           }}>
             {formatFilename(file.filename)}
           </div>
           <div className="file-meta" style={{
-            fontSize: '12px',
-            color: 'rgba(0, 255, 0, 0.7)'
+            fontSize: '11px',
+            color: 'rgba(0, 255, 0, 0.7)',
+            marginBottom: '2px',
+            lineHeight: '1.2',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
           }}>
             {formatFileSize(file.size || 0)} • {file.contentType}
           </div>
+          <div className="file-location" style={{
+            fontSize: '10px',
+            color: 'rgba(0, 255, 0, 0.5)',
+            fontStyle: 'italic',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            {file.location || 'Root'}
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'row',
+          gap: '4px',
+          flexShrink: 0
+        }}>
           <Button
             size="small"
             type="text"
@@ -157,11 +199,16 @@ const FileItem: React.FC<FileItemProps> = ({
             }}
             style={{
               color: '#00ff00',
-              background: token.colorBgContainer,
-              border: `1px solid ${token.colorBorder}`,
-              borderRadius: '6px',
-              minWidth: '32px',
-              height: '32px'
+              background: 'rgba(0, 255, 0, 0.1)',
+              border: `1px solid rgba(0, 255, 0, 0.3)`,
+              borderRadius: '4px',
+              width: '28px',
+              height: '28px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+              minWidth: '28px'
             }}
           />
           <Button
@@ -174,11 +221,16 @@ const FileItem: React.FC<FileItemProps> = ({
             }}
             style={{
               color: '#00ff00',
-              background: token.colorBgContainer,
-              border: `1px solid ${token.colorBorder}`,
-              borderRadius: '6px',
-              minWidth: '32px',
-              height: '32px'
+              background: 'rgba(0, 255, 0, 0.1)',
+              border: `1px solid rgba(0, 255, 0, 0.3)`,
+              borderRadius: '4px',
+              width: '28px',
+              height: '28px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+              minWidth: '28px'
             }}
           />
           <Button
@@ -191,11 +243,16 @@ const FileItem: React.FC<FileItemProps> = ({
               onDelete(file);
             }}
             style={{
-              background: token.colorBgContainer,
-              border: `1px solid ${token.colorBorder}`,
-              borderRadius: '6px',
-              minWidth: '32px',
-              height: '32px'
+              background: 'rgba(255, 0, 0, 0.1)',
+              border: `1px solid rgba(255, 0, 0, 0.3)`,
+              borderRadius: '4px',
+              width: '28px',
+              height: '28px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+              minWidth: '28px'
             }}
           />
         </div>
